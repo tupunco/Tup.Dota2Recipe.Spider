@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tup.Dota2Recipe.Spider", "Tup.Dota2Recipe.Spider\Tup.Dota2Recipe.Spider.csproj", "{548F899A-F60D-4D94-9188-2966F31822DB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{548F899A-F60D-4D94-9188-2966F31822DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{548F899A-F60D-4D94-9188-2966F31822DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{548F899A-F60D-4D94-9188-2966F31822DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{548F899A-F60D-4D94-9188-2966F31822DB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
