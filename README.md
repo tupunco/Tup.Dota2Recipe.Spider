@@ -5,3 +5,4 @@ Tup.Dota2Recipe.Spider
 
 .net 4.5/VS2012
 
+[Apache License](LICENSE.txt)

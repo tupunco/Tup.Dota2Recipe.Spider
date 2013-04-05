@@ -64,6 +64,10 @@ namespace Tup.Dota2Recipe.Spider.Entity
         /// </summary>
         public string stats { get; set; }
         /// <summary>
+        /// 基本统计信息
+        /// </summary>
+        public string[][] stats1 { get; set; }
+        /// <summary>
         /// 详细统计信息
         /// </summary>
         public string detailstats { get; set; }

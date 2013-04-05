@@ -338,7 +338,11 @@ namespace Tup.Dota2Recipe.Spider
                         //--------统计信息
                         var match = regStatsHtml.Match(lHeroHtml);
                         if (match.Success)
-                            cVHeroItem.stats = ItemUtils.HeroItem_FixStatsField(match.Groups["stats"].Value);
+                        {
+                            string[][] stats1 = null;
+                            cVHeroItem.stats = ItemUtils.HeroItem_FixStatsField(match.Groups["stats"].Value, out stats1);
+                            cVHeroItem.stats1 = stats1;
+                        }
                         else
                             Msg("********NULL:hero-get-DetailAndAbility-Hero-HTML-stats-1:{0}", heroItem.Key);
 
@@ -889,11 +893,13 @@ namespace Tup.Dota2Recipe.Spider
         /// </summary>
         /// <param name="html"></param>
         /// <returns></returns>
-        public static string HeroItem_FixStatsField(string html)
+        public static string HeroItem_FixStatsField(string html, out string[][] stats)
         {
+            stats = null;
             if (string.IsNullOrEmpty(html))
                 return html;
 
+            var statsList = new List<string[]>();
             var sb = new StringBuilder();
             var match = s_RegHeroItemStats.Match(html);
             while (match.Success)
@@ -902,9 +908,11 @@ namespace Tup.Dota2Recipe.Spider
                 if (sb.Length > 0)
                     sb.Append("<br />");
                 sb.AppendFormat(@"<img src=""{0}"" alt=""{1}"" />{1}:{2}", match.Groups["type"].Value, match.Groups["alt"].Value, match.Groups["value"].Value);
+                statsList.Add(new string[] { match.Groups["type"].Value, match.Groups["alt"].Value, match.Groups["value"].Value });
 
                 match = match.NextMatch();
             }
+            stats = statsList.ToArray();
             return sb.ToString();
         }
         /// <summary>
