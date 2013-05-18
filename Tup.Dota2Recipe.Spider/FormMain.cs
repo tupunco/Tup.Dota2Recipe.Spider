@@ -384,14 +384,14 @@ namespace Tup.Dota2Recipe.Spider
                         var imgUrl = string.Format(s_GetImageHeroesFullUri, heroItem.Key);
                         s_DownloadImageQueue.Enqueue(Tuple.Create(http, imgUrl, string.Format(@"{0}\{1}_full.png", heroesFilesDir, heroItem.Key)));
 
-                        imgUrl = string.Format(s_GetImageHeroesVertUri, heroItem.Key);
-                        s_DownloadImageQueue.Enqueue(Tuple.Create(http, imgUrl, string.Format(@"{0}\{1}_vert.jpg", heroesFilesDir, heroItem.Key)));
+                        //imgUrl = string.Format(s_GetImageHeroesVertUri, heroItem.Key);
+                        //s_DownloadImageQueue.Enqueue(Tuple.Create(http, imgUrl, string.Format(@"{0}\{1}_vert.jpg", heroesFilesDir, heroItem.Key)));
 
-                        imgUrl = string.Format(s_GetImageHeroesSBUri, heroItem.Key);
-                        s_DownloadImageQueue.Enqueue(Tuple.Create(http, imgUrl, string.Format(@"{0}\{1}_sb.png", heroesFilesDir, heroItem.Key)));
+                        //imgUrl = string.Format(s_GetImageHeroesSBUri, heroItem.Key);
+                        //s_DownloadImageQueue.Enqueue(Tuple.Create(http, imgUrl, string.Format(@"{0}\{1}_sb.png", heroesFilesDir, heroItem.Key)));
 
-                        imgUrl = string.Format(s_GetImageHeroesHPHoverUri, heroItem.Key);
-                        s_DownloadImageQueue.Enqueue(Tuple.Create(http, imgUrl, string.Format(@"{0}\{1}_hphover.png", heroesFilesDir, heroItem.Key)));
+                        //imgUrl = string.Format(s_GetImageHeroesHPHoverUri, heroItem.Key);
+                        //s_DownloadImageQueue.Enqueue(Tuple.Create(http, imgUrl, string.Format(@"{0}\{1}_hphover.png", heroesFilesDir, heroItem.Key)));
                     }
                 }
                 #endregion
