@@ -90,11 +90,11 @@ namespace Tup.Dota2Recipe.Spider
         /// <summary>
         /// 英雄详细-详细统计 正则
         /// </summary>
-        private static readonly string s_RegGetHeroItemDataDetailStatsHtml = @"<h3>Stats</h3>\s*<div\s+class=""redboxOuter"">(?<detailstats>[\s\S]*?)</div>\s*<h3>Abilities</h3>";
+        private static readonly string s_RegGetHeroItemDataDetailStatsHtml = @"<h3>属性</h3>\s*<div\s+class=""redboxOuter"">(?<detailstats>[\s\S]*?)</div>\s*<h3>技能</h3>";
         /// <summary>
         /// 物品列表筛选 正则
         /// </summary>
-        private static readonly string s_RegGetItemsHtml = @"<div\s+class=""shopColumn"">\s*<img\s+class=""shopColumnHeaderImg""\s+src=""http://media.steampowered.com/apps/dota2/images/heropedia/itemcat_(?<key>[\w\-_]+)\.png""[\s\S]*?alt=""(?<name>[\w\-_]+)""\s+title=""[\w\-_]+""\s*/>\s*(<div[\s\S]*?itemname=""(?<itemkey>[\w\-_]+)""[^>]*?>\s*<img[^>]*?/>\s*</div>\s*)+?</div>";
+        private static readonly string s_RegGetItemsHtml = @"<div\s+class=""shopColumn"">\s*<img\s+class=""shopColumnHeaderImg""\s+src=""[:/\.\w]+/apps/dota2/images/heropedia/itemcat_(?<key>[\w\-_]+)\.png""[\s\S]*?alt=""(?<name>[\w\-_]+)""\s+title=""[\w\-_]+""\s*/>\s*(<div[\s\S]*?itemname=""(?<itemkey>[\w\-_]+)""[^>]*?>\s*<img[^>]*?/>\s*</div>\s*)+?</div>";
 
         /// <summary>
         /// Dota2 Itembuilds path browser
@@ -346,11 +346,12 @@ namespace Tup.Dota2Recipe.Spider
                         else
                             Msg("********NULL:hero-get-DetailAndAbility-Hero-HTML-stats-1:{0}", heroItem.Key);
 
+
                         //--------详细统计信息
                         match = regDetailStatsHtml.Match(lHeroHtml);
                         if (match.Success)
                         {
-                            cVHeroItem.detailstats = match.Groups["detailstats"].Value;
+                            cVHeroItem.detailstats = ItemUtils.Common_FixBrHtml(match.Groups["detailstats"].Value);
                             cVHeroItem.detailstats1 = ItemUtils.HeroItem_FixDetailstatsField(cVHeroItem.detailstats, 1);
                             cVHeroItem.detailstats2 = ItemUtils.HeroItem_FixDetailstatsField(cVHeroItem.detailstats, 2);
                         }
@@ -850,7 +851,7 @@ namespace Tup.Dota2Recipe.Spider
         private static Regex s_RegAbilityItemDesc = new Regex(@"color='(\#[\w]{6})'", RegexOptions.IgnoreCase);
         private static Regex s_RegCommonBr2 = new Regex(@"(?:<br[^>]*?>\s*){2,}", RegexOptions.IgnoreCase);
         private static Regex s_RegCommonBrEnd = new Regex(@"<br[^>]*?>\s*$", RegexOptions.IgnoreCase);
-        private static Regex s_RegCommonRN = new Regex(@"[\r\n]+", RegexOptions.IgnoreCase);
+        private static Regex s_RegCommonRN = new Regex(@"[\s]+(?=[<])|(?<=[>])[\s]+|[\r\n]+", RegexOptions.IgnoreCase);
         private static Regex s_RegHeroItemStats = new Regex(@"<img\s+title=""(?<alt>[\w]+)""[^>]*/>\s*<div\s+class=""overview_StatVal""\s+id=""overview_(?<type>[\w]+?)Val"">\s*(?<value>[\s\S]+?)\s*</div>", RegexOptions.IgnoreCase);
         private static Regex s_RegHeroItemDetailstats1 = new Regex(@"<div\s+class=""statRowB?"">\s*(?:<div\s+class=""statRowCol2?W"">(?<value>[^<]+?)</div>\s*){3}\s*(?<type>[^<]+?)\s*</div>", RegexOptions.IgnoreCase);
         private static Regex s_RegHeroItemDetailstats2 = new Regex(@"<div\s+class=""statRowB?"">\s*(?:<div\s+class=""statRowCol2?W"">(?<value>[^<]+?)</div>\s*){1}\s*(?<type>[^<]+?)\s*</div>", RegexOptions.IgnoreCase);
