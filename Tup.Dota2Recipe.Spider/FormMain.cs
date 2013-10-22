@@ -456,6 +456,8 @@ namespace Tup.Dota2Recipe.Spider
                                                 var t = x.Value.Value;
                                                 if (t.StartsWith("item_"))
                                                     t = t.Substring(5);
+                                                if (t == "sheep") //INFO:亚巴顿数据错误
+                                                    t = "sheepstick";
                                                 return t;
                                             })
                                             .ToArray();
@@ -570,6 +572,14 @@ namespace Tup.Dota2Recipe.Spider
 
                     created = cVItem["created"].Value<bool>(),
                 };
+
+                //INFO:官方'紫怨'价格错误
+                if (tVItem.key_name == "orchid" && tVItem.cost == 5025)
+                    tVItem.cost = 4125;
+                //INFO:官方二级'净魂之刃'价格错误
+                if (tVItem.key_name == "diffusal_blade_2" && tVItem.cost == 3300)
+                    tVItem.cost = 4150;
+
                 //填充合成配方
                 componentsJToken = cVItem["components"];
                 if (componentsJToken != null && componentsJToken is JArray)
