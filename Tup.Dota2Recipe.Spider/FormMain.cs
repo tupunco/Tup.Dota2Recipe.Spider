@@ -27,7 +27,8 @@ namespace Tup.Dota2Recipe.Spider
         private static readonly Random s_SysRandom = new Random();
         private static readonly string s_LSChinese = "&l=schinese";
         private static readonly string s_Dota2HostUri = "http://www.dota2.com";
-        private static readonly string s_Dota2SteamMedia = "http://media.steampowered.com/apps/dota2/images";
+        //private static readonly string s_Dota2SteamMedia = "http://media.steampowered.com/apps/dota2/images";
+        private static readonly string s_Dota2SteamMedia = "http://cdn.dota2.com/apps/dota2/images";
 
         /// <summary>
         /// 技能图片
@@ -573,12 +574,37 @@ namespace Tup.Dota2Recipe.Spider
                     created = cVItem["created"].Value<bool>(),
                 };
 
+                var cKeyName = tVItem.key_name;
+                var cCost = tVItem.cost;
                 //INFO:官方'紫怨'价格错误
-                if (tVItem.key_name == "orchid" && tVItem.cost == 5025)
+                if (cKeyName == "orchid" && cCost == 5025)
                     tVItem.cost = 4125;
                 //INFO:官方二级'净魂之刃'价格错误
-                if (tVItem.key_name == "diffusal_blade_2" && tVItem.cost == 3300)
+                if (cKeyName == "diffusal_blade_2" && cCost == 3300)
                     tVItem.cost = 4150;
+
+                //INFO:官方'达贡之神力'价格错误(2720/3970/5220/6470/7720)
+                if (cKeyName == "dagon" && cCost == 2800)
+                    tVItem.cost = 2720;
+                if (cKeyName.StartsWith("dagon_") && cCost == 2850)
+                {
+                    if (cKeyName == "dagon_2")
+                        tVItem.cost = 3970;
+                    else if (cKeyName == "dagon_3")
+                        tVItem.cost = 5220;
+                    else if (cKeyName == "dagon_4")
+                        tVItem.cost = 6470;
+                    else if (cKeyName == "dagon_5")
+                        tVItem.cost = 7720;
+                }
+                //INFO:官方二级/三级'死灵书'价格错误(2700/3950/5200)
+                if (cKeyName.StartsWith("necronomicon_") && cCost == 2700)
+                {
+                    if (cKeyName == "necronomicon_2")
+                        tVItem.cost = 3950;
+                    else if (cKeyName == "necronomicon_3")
+                        tVItem.cost = 5200;
+                }
 
                 //填充合成配方
                 componentsJToken = cVItem["components"];
