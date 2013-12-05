@@ -44,7 +44,7 @@
             // 
             // ButtonGetHeroData
             // 
-            this.ButtonGetHeroData.Location = new System.Drawing.Point(13, 13);
+            this.ButtonGetHeroData.Location = new System.Drawing.Point(12, 57);
             this.ButtonGetHeroData.Name = "ButtonGetHeroData";
             this.ButtonGetHeroData.Size = new System.Drawing.Size(120, 23);
             this.ButtonGetHeroData.TabIndex = 0;
@@ -54,7 +54,7 @@
             // 
             // ButtonGetItemsData
             // 
-            this.ButtonGetItemsData.Location = new System.Drawing.Point(13, 149);
+            this.ButtonGetItemsData.Location = new System.Drawing.Point(13, 12);
             this.ButtonGetItemsData.Name = "ButtonGetItemsData";
             this.ButtonGetItemsData.Size = new System.Drawing.Size(120, 23);
             this.ButtonGetItemsData.TabIndex = 1;
@@ -69,9 +69,9 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.ListBoxMsg.FormattingEnabled = true;
             this.ListBoxMsg.ItemHeight = 12;
-            this.ListBoxMsg.Location = new System.Drawing.Point(13, 206);
+            this.ListBoxMsg.Location = new System.Drawing.Point(13, 182);
             this.ListBoxMsg.Name = "ListBoxMsg";
-            this.ListBoxMsg.Size = new System.Drawing.Size(592, 280);
+            this.ListBoxMsg.Size = new System.Drawing.Size(592, 304);
             this.ListBoxMsg.TabIndex = 2;
             // 
             // CheckBoxHeroDetail
@@ -109,7 +109,7 @@
             // CheckBoxItemsImage
             // 
             this.CheckBoxItemsImage.AutoSize = true;
-            this.CheckBoxItemsImage.Location = new System.Drawing.Point(172, 153);
+            this.CheckBoxItemsImage.Location = new System.Drawing.Point(172, 16);
             this.CheckBoxItemsImage.Name = "CheckBoxItemsImage";
             this.CheckBoxItemsImage.Size = new System.Drawing.Size(90, 16);
             this.CheckBoxItemsImage.TabIndex = 6;
@@ -126,7 +126,7 @@
             this.GroupBoxHero.Controls.Add(this.CheckBoxHeroDetail);
             this.GroupBoxHero.Controls.Add(this.CheckBoxHeroImage);
             this.GroupBoxHero.Controls.Add(this.CheckBoxHeroAbilityImage);
-            this.GroupBoxHero.Location = new System.Drawing.Point(166, 12);
+            this.GroupBoxHero.Location = new System.Drawing.Point(166, 44);
             this.GroupBoxHero.Name = "GroupBoxHero";
             this.GroupBoxHero.Size = new System.Drawing.Size(439, 125);
             this.GroupBoxHero.TabIndex = 7;
@@ -173,7 +173,7 @@
             this.Controls.Add(this.ButtonGetItemsData);
             this.Controls.Add(this.ButtonGetHeroData);
             this.Name = "MainForm";
-            this.Text = "FormMain";
+            this.Text = "Tup.Dota2Recipe.Spider";
             this.GroupBoxHero.ResumeLayout(false);
             this.GroupBoxHero.PerformLayout();
             this.ResumeLayout(false);
