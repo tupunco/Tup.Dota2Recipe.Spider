@@ -43,6 +43,23 @@ namespace Tup.Dota2Recipe.Spider.Entity
         public string[] roles { get; set; }
         public string[] roles_l { get; set; }
 
+        /// <summary>
+        /// replays 站 HeroID
+        /// </summary>
+        [JsonIgnore]
+        public string replays_id { get; set; }
+        /// <summary>
+        /// 昵称/别称
+        /// </summary>
+        /// <remarks>
+        /// FROM:http://dota2.replays.net/
+        /// </remarks>
+        public string[] nickname_l { get; set; }
+        /// <summary>
+        /// 本英雄统计参数信息
+        /// </summary>
+        public HeroStatsItem statsall { get; set; }
+
         public override string ToString()
         {
             return string.Format("[HeroSimpleItem name:{0},{1} atk:{2},{3}]", name, name_l, atk, atk_l);
@@ -96,5 +113,75 @@ namespace Tup.Dota2Recipe.Spider.Entity
         {
             return string.Format("[HeroItem {0} bio:{1}]", base.ToString(), bio_l);
         }
+    }
+    /// <summary>
+    /// 英雄统计参数实体
+    /// </summary>
+    public class HeroStatsItem
+    {
+        /// <summary>
+        /// 初始力量
+        /// </summary>
+        public double init_str { get; set; }
+        /// <summary>
+        /// 初始敏捷
+        /// </summary>
+        public double init_agi { get; set; }
+        /// <summary>
+        /// 初始智力
+        /// </summary>
+        public double init_int { get; set; }
+
+        /// <summary>
+        /// 力量成长
+        /// </summary>
+        public double lv_str { get; set; }
+        /// <summary>
+        /// 敏捷成长
+        /// </summary>
+        public double lv_agi { get; set; }
+        /// <summary>
+        /// 智力成长
+        /// </summary>
+        public double lv_int { get; set; }
+
+        /// <summary>
+        /// 初始血量
+        /// </summary>
+        public double init_hp { get; set; }
+        /// <summary>
+        /// 初始魔法
+        /// </summary>
+        public double init_mp { get; set; }
+        /// <summary>
+        /// 初始护甲
+        /// </summary>
+        public double init_armor { get; set; }
+
+        /// <summary>
+        /// 血量成长
+        /// </summary>
+        public double lv_hp { get; set; }
+        /// <summary>
+        /// 魔法成长
+        /// </summary>
+        public double lv_mp { get; set; }
+        /// <summary>
+        /// 护甲成长
+        /// </summary>
+        public double lv_armor { get; set; }
+
+        /// <summary>
+        /// 初始最小攻击力
+        /// </summary>
+        public double init_min_dmg { get; set; }
+        /// <summary>
+        /// 初始最大攻击力
+        /// </summary>
+        public double init_max_dmg { get; set; }
+        /// <summary>
+        /// 攻击成长
+        /// </summary>
+        public double lv_dmg { get; set; }
     }
 }

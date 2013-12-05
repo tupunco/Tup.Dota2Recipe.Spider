@@ -81,6 +81,19 @@ namespace Tup.Dota2Recipe.Spider
         private static readonly string s_GetItemsDataHtmlUri = s_Dota2HostUri + "/items/?v={0}";
 
         /// <summary>
+        /// replays.net GetHeroData_List
+        /// </summary>
+        private static readonly string s_Replays_GetHeroData_List_Uri = @"http://dota2.replays.net/hero/";
+        /// <summary>
+        /// replays.net GetHeroData_Detail
+        /// </summary>
+        private static readonly string s_Replays_GetHeroData_Detail_Uri = s_Replays_GetHeroData_List_Uri + @"services/heroData.ashx?heroID={0}";
+        /// <summary>
+        /// replays.net GetHeroData_List 正则
+        /// </summary>
+        private static readonly string s_Replays_GetHeroData_List_Reg = @"<li\s+data-heroid=""(?<id>\d+)""\s+data-type=""[^""]+"">\s*<a\s+href=""[^""]+""\s+target=""_blank"">\s*<img\s+src=""http://rnimg\.cn/dota2/images/heros/(?<keyname>[^""]+)_sb\.png""\s+alt=""(?<name1>[^""]+)"">\s*</a>\s*<em>\s*<a\s+href=""[^""]+""\s+target=""_blank"">[^<]+</a>\s*</em>\s*</li>";
+
+        /// <summary>
         /// 英雄列表筛选 正则
         /// </summary>
         private static readonly string s_RegGetHeroHtml = @"<div\s+class=""heroIcons"">\s*(<a\s+id=""link_(?<key>[\w\-_]+)""[^>]*?href=""http://www.dota2.com/hero/(?<name>[\w\-_]+)/""[^>]*?>\s*<img[^>]*?/>\s*<img[^>]*?/>\s*</a>\s*)+?\s*</div>";
@@ -97,6 +110,20 @@ namespace Tup.Dota2Recipe.Spider
         /// </summary>
         private static readonly string s_RegGetItemsHtml = @"<div\s+class=""shopColumn"">\s*<img\s+class=""shopColumnHeaderImg""\s+src=""[:/\.\w]+/apps/dota2/images/heropedia/itemcat_(?<key>[\w\-_]+)\.png""[\s\S]*?alt=""(?<name>[\w\-_]+)""\s+title=""[\w\-_]+""\s*/>\s*(<div[\s\S]*?itemname=""(?<itemkey>[\w\-_]+)""[^>]*?>\s*<img[^>]*?/>\s*</div>\s*)+?</div>";
 
+        /// <summary>
+        /// itemslist.json
+        /// </summary>
+        private static readonly string s_ToJsonFile_ItemsList = "itemslist.json";
+        /// <summary>
+        /// herolist.json
+        /// </summary>
+        private static readonly string s_ToJsonFile_HeroList = "herolist.json";
+        /// <summary>
+        /// {0}\hero-{1}.json
+        /// </summary>
+        private static readonly string s_ToJsonFile_HeroDetial = @"{0}\hero-{1}.json";
+
+        #region GetHerosData Button
         /// <summary>
         /// Dota2 Itembuilds path browser
         /// </summary>
@@ -115,6 +142,8 @@ namespace Tup.Dota2Recipe.Spider
         /// <param name="e"></param>
         private async void ButtonGetHeroData_Click(object sender, EventArgs e)
         {
+            this.ClearMsg();
+
             if (this.CheckBoxHeroDetail.Checked
                 && (string.IsNullOrEmpty(this.TextBoxDota2Itembuilds.Text)
                     || !Directory.Exists(this.TextBoxDota2Itembuilds.Text)))
@@ -221,6 +250,74 @@ namespace Tup.Dota2Recipe.Spider
             Msg("hero-get-HTML-end");
             #endregion
 
+            #region replays.net-HeroList
+            Msg("hero-get-Replays_GetHeroData_List-begion");
+            var lReplaysHeroDataHtmlBytes = await http.GetByteArrayAsync(s_Replays_GetHeroData_List_Uri);
+            if (lReplaysHeroDataHtmlBytes != null && lReplaysHeroDataHtmlBytes.Length > 0)
+            {
+                var lReplaysHeroDataHtml_Reg = new Regex(s_Replays_GetHeroData_List_Reg, RegexOptions.IgnoreCase | RegexOptions.Multiline);
+                var m = lReplaysHeroDataHtml_Reg.Match(Encoding.GetEncoding("GB2312").GetString(lReplaysHeroDataHtmlBytes));
+                var tmKeyname = string.Empty;
+                while (m.Success)
+                {
+                    //earth_spirit   earth
+                    //ember_spirit	ember
+                    HeroItem tHero = null;
+                    tmKeyname = m.Groups["keyname"].Value;
+                    if (tmKeyname == "earth")
+                        tmKeyname = "earth_spirit";
+                    else if (tmKeyname == "ember")
+                        tmKeyname = "ember_spirit";
+
+                    if (!heroDic.TryGetValue(tmKeyname, out tHero))
+                        Msg("********NULL:hero-get-Replays_GetHeroData_List-HTML-2-{0}", tmKeyname);
+                    else
+                        tHero.replays_id = m.Groups["id"].Value;
+
+                    m = m.NextMatch();
+                }
+            }
+            else
+                Msg("********NULL:hero-get-Replays_GetHeroData_List-HTML-1");
+
+            Msg("hero-get-Replays_GetHeroData_List-end");
+            #endregion
+
+            #region replays.net-HeroDetail JSON
+            Msg("hero-get-Replays_GetHeroData_Detail-begion");
+            foreach (var heroItem in heroDic)
+            {
+                var cVHeroItem = heroItem.Value;
+                if (!string.IsNullOrEmpty(cVHeroItem.replays_id))
+                {
+                    try
+                    {
+                        var tGetHeroData_Detail_Uri = string.Format(s_Replays_GetHeroData_Detail_Uri, cVHeroItem.replays_id);
+
+                        Msg("hero-get-Replays_GetHeroData_Detail-{0}", tGetHeroData_Detail_Uri);
+
+                        var replays = JObject.Parse(await http.GetStringAsync(tGetHeroData_Detail_Uri));
+                        var tHeroSuoXie = replays["heroData"]["HeroSuoXie"].Value<string>();
+                        cVHeroItem.nickname_l = tHeroSuoXie.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                    }
+                    catch (Exception ex)
+                    {
+                        Msg("********NULL:hero-get-Replays_GetHeroData_Detail-ID-1-{0}-EX:{1}", heroItem.Key, ex.Message);
+                        ex = null;
+                    }
+                }
+                else
+                    Msg("********NULL:hero-get-Replays_GetHeroData_Detail-ID-2-{0}", heroItem.Key);
+            }
+            Msg("hero-get-Replays_GetHeroData_Detail-end");
+            #endregion
+
+            #region HeroDetail/Ability
+            if (this.CheckBoxHeroDetail.Checked)
+                await GetHeroDetailAndAbility(heroDic);
+            #endregion
+
+            #region ToJsonFile_HeroList
             var resDic = heroDic
                 .ToDictionary(x => x.Key, x => new HeroSimpleItem()
                 {
@@ -231,29 +328,26 @@ namespace Tup.Dota2Recipe.Spider
                     atk_l = x.Value.atk_l,
                     hp = x.Value.hp,
                     roles = x.Value.roles,
-                    roles_l = x.Value.roles_l
+                    roles_l = x.Value.roles_l,
+                    nickname_l = x.Value.nickname_l,
+                    statsall = x.Value.statsall,
                 });
-            JsonUtil.SerializeToFile(resDic, "herolist.json");
+            JsonUtil.SerializeToFile(resDic, s_ToJsonFile_HeroList);
             Msg("hero-get-save---------------------Count:{0}-", heroDic.Count);
-
-            if (this.CheckBoxHeroDetail.Checked)
-                GetHeroDetailAndAbility(heroDic);
+            #endregion
             //LogHelper.LogDebug("ButtonGetHeroData_Click-{0}-\r\n{1}", heroDic, JsonUtil.Serialize(heroDic));
         }
         /// <summary>
         /// 英雄详细/技能/英雄头像/技能图片 获取
         /// </summary>
         /// <param name="heroDic"></param>
-        private async void GetHeroDetailAndAbility(Dictionary<string, HeroItem> heroDic)
+        private async Task GetHeroDetailAndAbility(Dictionary<string, HeroItem> heroDic)
         {
             if (heroDic == null || heroDic.Count <= 0)
                 return;
 
             var dota2ItembuildsPath = this.TextBoxDota2Itembuilds.Text;
             ThrowHelper.ThrowIfFalse(Directory.Exists(dota2ItembuildsPath), "dota2ItembuildsPath");
-            Dictionary<string, ItemsItem> itemsList = null;
-            if (File.Exists("itemslist.json"))
-                itemsList = JsonUtil.Deserialize<Dictionary<string, ItemsItem>>(File.ReadAllText("itemslist.json"));
 
             var heroDetailDir = "hero_detail";
             var abilitiesFilesDir = "abilities_images";
@@ -268,6 +362,7 @@ namespace Tup.Dota2Recipe.Spider
             var http = new HttpClient();
             var abilityDic = new Dictionary<string, AbilityItem>();
 
+            #region get-DetailAndAbility JSON
             Msg("hero-get-DetailAndAbility");
             var lurl = string.Format(s_GetAbilityDataJsonUri, GetRandom()) + s_LSChinese;
             var lAbilityData = JObject.Parse(await http.GetStringAsync(lurl));
@@ -307,6 +402,12 @@ namespace Tup.Dota2Recipe.Spider
                 }
             }
             Msg("hero-get-DetailAndAbility-Ability-END");
+            #endregion
+
+            #region get-HeroItemDataDetail
+            Dictionary<string, ItemsItem> itemsList = null;
+            if (File.Exists(s_ToJsonFile_ItemsList))
+                itemsList = JsonUtil.Deserialize<Dictionary<string, ItemsItem>>(File.ReadAllText(s_ToJsonFile_ItemsList));
 
             //s_RegGetHeroItemDataStatsHtml
             //s_RegGetHeroItemDataStatsHtml_Clear
@@ -334,7 +435,7 @@ namespace Tup.Dota2Recipe.Spider
                     var lHeroHtml = await http.GetStringAsync(lHeroUrl);
                     if (!string.IsNullOrEmpty(lHeroHtml))
                     {
-                        File.WriteAllText(string.Format(@"{0}\{1}.html", heroDetailDir, cVHeroItem.keyUri_name), lHeroHtml);
+                        //File.WriteAllText(string.Format(@"{0}\{1}.html", heroDetailDir, cVHeroItem.keyUri_name), lHeroHtml);
 
                         //--------统计信息
                         var match = regStatsHtml.Match(lHeroHtml);
@@ -347,7 +448,6 @@ namespace Tup.Dota2Recipe.Spider
                         else
                             Msg("********NULL:hero-get-DetailAndAbility-Hero-HTML-stats-1:{0}", heroItem.Key);
 
-
                         //--------详细统计信息
                         match = regDetailStatsHtml.Match(lHeroHtml);
                         if (match.Success)
@@ -358,6 +458,9 @@ namespace Tup.Dota2Recipe.Spider
                         }
                         else
                             Msg("********NULL:hero-get-DetailAndAbility-Hero-HTML-detailstats-1:{0}", heroItem.Key);
+
+                        //hp: "strength",
+                        cVHeroItem.statsall = ItemUtils.HeroItem_FixStatsAllField(cVHeroItem.hp, cVHeroItem.stats1, cVHeroItem.detailstats1);
                     }
                     else
                     {
@@ -375,7 +478,7 @@ namespace Tup.Dota2Recipe.Spider
                 #endregion
 
                 Msg("hero-get-DetailAndAbility-Hero-GET:{0}-abilities:{1}-----", cVHeroItem.key_name, cVHeroItem.abilities.Length);
-                JsonUtil.SerializeToFile(cVHeroItem, string.Format(@"{0}\hero-{1}.json", heroDetailDir, heroItem.Key));
+                JsonUtil.SerializeToFile(cVHeroItem, string.Format(s_ToJsonFile_HeroDetial, heroDetailDir, heroItem.Key));
                 Msg("hero-get-DetailAndAbility-Hero-GET:{0}-save-------", cVHeroItem.key_name);
 
                 #region 下载英雄图片
@@ -400,6 +503,20 @@ namespace Tup.Dota2Recipe.Spider
 
                 await Task.Delay(s_SysRandom.Next(50, 200));
             }
+            #endregion
+
+            #region 保存物品配置
+            if (itemsList != null)
+            {
+                foreach (var itemsItem in itemsList.Values)
+                {
+                    if (itemsItem.toheroSets == null)
+                        continue;
+                    itemsItem.toheros = itemsItem.toheroSets.ToArray();
+                }
+                JsonUtil.SerializeToFile(itemsList, s_ToJsonFile_ItemsList);
+            }
+            #endregion
 
             Msg("hero-get-DetailAndAbility--save---------------------END-");
         }
@@ -490,6 +607,7 @@ namespace Tup.Dota2Recipe.Spider
 
             Msg("---------CheckHeroDetailItembuilds-----------Hero:{0}---", heroKeyName);
 
+            ItemsItem tItemsItem = null;
             //--------------------------
             //gauntlet:	gauntlets
             //assault_cuirass:	assault
@@ -511,9 +629,23 @@ namespace Tup.Dota2Recipe.Spider
 
                     if (!sysItemsList.ContainsKey(cItems))
                         Msg("****-Itembuilds-NULL-Hero:{0},Items:{1}", heroKeyName, cItems);
+                    else
+                    {
+                        tItemsItem = null;
+                        if (sysItemsList.TryGetValue(cItems, out tItemsItem) && tItemsItem != null)
+                        {
+                            if (tItemsItem.toheroSets == null)
+                                tItemsItem.toheroSets = new HashSet<string>();
+
+                            tItemsItem.toheroSets.Add(heroKeyName);
+                        }
+                    }
                 }
             }
         }
+        #endregion
+
+        #region GetItemsData Button
         /// <summary>
         /// 物品数据获取
         /// </summary>
@@ -521,6 +653,8 @@ namespace Tup.Dota2Recipe.Spider
         /// <param name="e"></param>
         private async void ButtonGetItemsData_Click(object sender, EventArgs e)
         {
+            this.ClearMsg();
+
             var itemsDic = new Dictionary<string, ItemsItem>();
             var http = new HttpClient();
             var itemsFilesDir = "items_images";
@@ -682,7 +816,7 @@ namespace Tup.Dota2Recipe.Spider
 
             //var resDic = itemsDic.Where(x => !string.IsNullOrEmpty(x.Value.itemcat))
             //                     .ToDictionary(x => x.Key, x => x.Value);
-            JsonUtil.SerializeToFile(itemsDic, "itemslist.json");
+            JsonUtil.SerializeToFile(itemsDic, s_ToJsonFile_ItemsList);
 
             Msg("items-get-save---------------------Count:{0}-", itemsDic.Count);
         }
@@ -710,7 +844,128 @@ namespace Tup.Dota2Recipe.Spider
             else
                 return null;
         }
+        #endregion
 
+        #region GetHeroRnData Button
+        /// <summary>
+        /// 英雄昵称数据
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ButtonGetHeroNnData_Click(object sender, EventArgs e)
+        {
+            //Dictionary<string, HeroSimpleItem> heroList = null;
+            //if (File.Exists(s_ToJsonFile_HeroList))
+            //    heroList = JsonUtil.Deserialize<Dictionary<string, HeroSimpleItem>>(File.ReadAllText(s_ToJsonFile_HeroList));
+            //else
+            //{
+            //    Msg("********EX:hero-get-NnData-HeroList-FileNotFound-File:{0}", s_ToJsonFile_HeroList);
+            //    return;
+            //}
+            ////1.replays_英雄列表 http://dota2.replays.net/hero/
+            ////2.replays_英雄详细数据 http://dota2.replays.net/hero/services/heroData.ashx?heroID=11
+
+            //JsonUtil.SerializeToFile(heroList, s_ToJsonFile_HeroList);
+        }
+        #endregion
+
+        #region Utility
+        /// <summary>
+        /// 随即发生器
+        /// </summary>
+        /// <returns></returns>
+        private static int GetRandom()
+        {
+            return s_SysRandom.Next(99999, 999999999);
+        }
+
+        #region SaveJpg
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="pngBuffer"></param>
+        /// <param name="?"></param>
+        private static void ResaveJpgFile(byte[] imgBuffer, string savePath)
+        {
+            if (imgBuffer == null || imgBuffer.Length <= 0)
+                return;
+
+            ThrowHelper.ThrowIfNull(savePath, "savePath");
+
+            var ext = Path.GetExtension(savePath).ToLower();
+            if (ext == ".jpg" || ext == ".jpeg")
+                File.WriteAllBytes(savePath, imgBuffer);
+            else
+            {
+                savePath = savePath.Substring(0, savePath.Length - ext.Length) + ".jpg";
+                using (var bmp = Bitmap.FromStream(new MemoryStream(imgBuffer)))
+                {
+                    SaveJpeg(bmp, savePath, 86L);
+                }
+            }
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="format"></param>
+        /// <returns></returns>
+        private static ImageCodecInfo GetImageEncoder(ImageFormat format)
+        {
+            var guid = format.Guid;
+            return ImageCodecInfo.GetImageDecoders().FirstOrDefault(x => x.FormatID == guid);
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="img"></param>
+        /// <param name="filePath"></param>
+        /// <param name="quality"></param>
+        private static void SaveJpeg(Image img, string filePath, long quality)
+        {
+            var encoderParameters = new EncoderParameters(1);
+            encoderParameters.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, quality);
+            img.Save(filePath, GetImageEncoder(ImageFormat.Jpeg), encoderParameters);
+        }
+        #endregion
+
+        #region Msg
+        /// <summary>
+        /// 
+        /// </summary>
+        private void ClearMsg()
+        {
+            this.ListBoxMsg.BeginInvoke(new Action(() =>
+            {
+                this.ListBoxMsg.Items.Clear();
+            }));
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="msg"></param>
+        private void Msg(string msg)
+        {
+            if (string.IsNullOrEmpty(msg))
+                return;
+
+            this.ListBoxMsg.BeginInvoke(new Action(() =>
+            {
+                this.ListBoxMsg.Items.Add(msg ?? string.Empty);
+            }));
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="format"></param>
+        /// <param name="args"></param>
+        private void Msg(string format, params object[] args)
+        {
+            Msg(string.Format(format, args));
+        }
+        #endregion
+        #endregion
+
+        #region Download Image
         /// <summary>
         /// 下载图片并保存到指定路径
         /// </summary>
@@ -769,90 +1024,6 @@ namespace Tup.Dota2Recipe.Spider
             }).Result;
         }
 
-        #region SaveJpg
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="pngBuffer"></param>
-        /// <param name="?"></param>
-        private static void ResaveJpgFile(byte[] imgBuffer, string savePath)
-        {
-            if (imgBuffer == null || imgBuffer.Length <= 0)
-                return;
-
-            ThrowHelper.ThrowIfNull(savePath, "savePath");
-
-            var ext = Path.GetExtension(savePath).ToLower();
-            if (ext == ".jpg" || ext == ".jpeg")
-                File.WriteAllBytes(savePath, imgBuffer);
-            else
-            {
-                savePath = savePath.Substring(0, savePath.Length - ext.Length) + ".jpg";
-                using (var bmp = Bitmap.FromStream(new MemoryStream(imgBuffer)))
-                {
-                    SaveJpeg(bmp, savePath, 86L);
-                }
-            }
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="format"></param>
-        /// <returns></returns>
-        private static ImageCodecInfo GetImageEncoder(ImageFormat format)
-        {
-            var guid = format.Guid;
-            return ImageCodecInfo.GetImageDecoders().FirstOrDefault(x => x.FormatID == guid);
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="img"></param>
-        /// <param name="filePath"></param>
-        /// <param name="quality"></param>
-        private static void SaveJpeg(Image img, string filePath, long quality)
-        {
-            var encoderParameters = new EncoderParameters(1);
-            encoderParameters.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, quality);
-            img.Save(filePath, GetImageEncoder(ImageFormat.Jpeg), encoderParameters);
-        }
-        #endregion
-
-        #region Msg
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="msg"></param>
-        private void Msg(string msg)
-        {
-            if (string.IsNullOrEmpty(msg))
-                return;
-
-            this.ListBoxMsg.BeginInvoke(new Action(() =>
-            {
-                this.ListBoxMsg.Items.Add(msg ?? string.Empty);
-            }));
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="format"></param>
-        /// <param name="args"></param>
-        private void Msg(string format, params object[] args)
-        {
-            Msg(string.Format(format, args));
-        }
-        #endregion
-
-        /// <summary>
-        /// 随即发生器
-        /// </summary>
-        /// <returns></returns>
-        private static int GetRandom()
-        {
-            return s_SysRandom.Next(99999, 999999999);
-        }
-
         private static DownloadImageThreadQueue s_DownloadImageQueue = new DownloadImageThreadQueue(int.MaxValue / 10);
         /// <summary>
         /// 统计提交队列
@@ -877,6 +1048,12 @@ namespace Tup.Dota2Recipe.Spider
                 DownloadImageSync(item.Item1, item.Item2, item.Item3);
             }
         }
+        #endregion
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
+        }
     }
     /// <summary>
     /// 
@@ -892,7 +1069,7 @@ namespace Tup.Dota2Recipe.Spider
         private static Regex s_RegHeroItemDetailstats1 = new Regex(@"<div\s+class=""statRowB?"">\s*(?:<div\s+class=""statRowCol2?W"">(?<value>[^<]+?)</div>\s*){3}\s*(?<type>[^<]+?)\s*</div>", RegexOptions.IgnoreCase);
         private static Regex s_RegHeroItemDetailstats2 = new Regex(@"<div\s+class=""statRowB?"">\s*(?:<div\s+class=""statRowCol2?W"">(?<value>[^<]+?)</div>\s*){1}\s*(?<type>[^<]+?)\s*</div>", RegexOptions.IgnoreCase);
         /// <summary>
-        /// 
+        /// Fix 英雄详细统计信息
         /// </summary>
         /// <param name="html"></param>
         /// <param name="type">1,2</param>
@@ -926,7 +1103,7 @@ namespace Tup.Dota2Recipe.Spider
             return res.ToArray();
         }
         /// <summary>
-        /// 
+        /// Fix 英雄基本统计信息
         /// </summary>
         /// <param name="html"></param>
         /// <returns></returns>
@@ -951,6 +1128,89 @@ namespace Tup.Dota2Recipe.Spider
             }
             stats = statsList.ToArray();
             return sb.ToString();
+        }
+        /// <summary>
+        /// Fix 英雄统计参数信息
+        /// </summary>
+        /// <param name="hp">英雄属性[1:strength[力量]/2:agility[敏捷]/3:intelligence[智力]]</param>
+        /// <param name="stats"></param>
+        /// <param name="detailstats"></param>
+        /// <returns></returns>
+        public static HeroStatsItem HeroItem_FixStatsAllField(string hp, string[][] stats, string[][] detailstats)
+        {
+            if (string.IsNullOrEmpty(hp) || stats == null || detailstats == null || stats.Length < 6 || detailstats.Length < 4)
+                return null;
+
+            //stats1: [["Int","Intelligence","21 + 2.00"],
+            //           ["Agi","Agility","17 + 1.50"],
+            //           ["Str","Strength","23 + 2.70"],
+            //           ["Attack","Damage","32 - 42"],
+            //           ["Speed","Movespeed","310"],
+            //           ["Defense","Armor","1.38"]],
+
+            var s = new HeroStatsItem();
+            //智力
+            var intsp = HeroItem_FixStatsAllField_Split(stats[0][2], '+');
+            s.init_int = intsp.Item1;
+            s.lv_int = intsp.Item2;
+            //敏捷
+            var agisp = HeroItem_FixStatsAllField_Split(stats[1][2], '+');
+            s.init_agi = agisp.Item1;
+            s.lv_agi = agisp.Item2;
+            //力量
+            var strsp = HeroItem_FixStatsAllField_Split(stats[2][2], '+');
+            s.init_str = strsp.Item1;
+            s.lv_str = strsp.Item2;
+
+            //攻击力
+            var dmgsp = HeroItem_FixStatsAllField_Split(stats[3][2], '-');
+            s.init_min_dmg = dmgsp.Item1;
+            s.init_max_dmg = dmgsp.Item2;
+            if (hp == "strength")
+                s.lv_dmg = s.lv_str;
+            else if (hp == "agility")
+                s.lv_dmg = s.lv_agi;
+            else if (hp == "intelligence")
+                s.lv_dmg = s.lv_int;
+            else
+                throw new NotSupportedException();
+
+            //"detailstats1":[["生命值","2,198","1,305","587"],
+            //               ["魔法值","1,157","637","273"],
+            //               ["攻击力","140-150","93-103","55-65"],
+            //               ["护甲","9","4","1"]]
+
+            //护甲
+            var armorsp = HeroItem_FixStatsAllField_Split(stats[5][2], 'x');
+            s.init_armor = armorsp.Item1;
+            s.lv_armor = Math.Round(1D / 7D, 2);
+
+            s.lv_hp = 19D;
+            s.lv_mp = 13D;
+            s.init_hp = HeroItem_FixStatsAllField_Split(detailstats[0][3], 'x').Item1;
+            s.init_mp = HeroItem_FixStatsAllField_Split(detailstats[1][3], 'x').Item1;
+
+            return s;
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="splitChar"></param>
+        /// <returns></returns>
+        private static Tuple<double, double> HeroItem_FixStatsAllField_Split(string value, char splitChar)
+        {
+            ThrowHelper.ThrowIfNull(value, "value");
+
+            if (splitChar == 'x')
+                return Tuple.Create(double.Parse(value.Replace(",", "")), 0D);
+            else
+            {
+                var t = value.Split(splitChar);
+                if (t.Length > 1)
+                    return Tuple.Create(double.Parse(t[0].Replace(",", "").Trim()), double.Parse(t[1].Replace(",", "").Trim()));
+            }
+            throw new NotSupportedException();
         }
         /// <summary>
         /// 

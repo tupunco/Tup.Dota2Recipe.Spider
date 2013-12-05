@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace Tup.Dota2Recipe.Spider.Entity
 {
@@ -14,7 +15,7 @@ namespace Tup.Dota2Recipe.Spider.Entity
         public string key_name { get; set; }
         [JsonIgnore]
         public string img { get; set; }
-        
+
         public string dname { get; set; }
         public string dname_l { get; set; }
         /// <summary>
@@ -42,7 +43,7 @@ namespace Tup.Dota2Recipe.Spider.Entity
         /// <summary>
         /// 知识提示
         /// </summary>
-        public string lore { get; set; } 
+        public string lore { get; set; }
         /// <summary>
         /// 属性加成
         /// </summary>
@@ -64,6 +65,15 @@ namespace Tup.Dota2Recipe.Spider.Entity
         /// 进阶合成物品
         /// </summary>
         public string[] tocomponents { get; set; }
+        /// <summary>
+        /// 此物品推荐英雄使用
+        /// </summary>
+        public string[] toheros { get; set; }
+        /// <summary>
+        /// 此物品推荐英雄使用 Sets
+        /// </summary>
+        [JsonIgnore]
+        public HashSet<string> toheroSets { get; set; }
 
         public bool created { get; set; }
         /// <summary>
