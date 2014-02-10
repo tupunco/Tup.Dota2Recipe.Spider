@@ -288,22 +288,29 @@ namespace Tup.Dota2Recipe.Spider
             foreach (var heroItem in heroDic)
             {
                 var cVHeroItem = heroItem.Value;
-                if (!string.IsNullOrEmpty(cVHeroItem.replays_id))
+                var replaysId = cVHeroItem.replays_id;
+                if (!string.IsNullOrEmpty(replaysId))
                 {
                     try
                     {
-                        var tGetHeroData_Detail_Uri = string.Format(s_Replays_GetHeroData_Detail_Uri, cVHeroItem.replays_id);
+                        var tGetHeroData_Detail_Uri = string.Format(s_Replays_GetHeroData_Detail_Uri, replaysId);
 
                         Msg("hero-get-Replays_GetHeroData_Detail-{0}", tGetHeroData_Detail_Uri);
 
                         var replays = JObject.Parse(await http.GetStringAsync(tGetHeroData_Detail_Uri));
                         var tHeroSuoXie = replays["heroData"]["HeroSuoXie"].Value<string>();
+                        if (replaysId == "66")
+                            tHeroSuoXie += ",骷髅王";
                         cVHeroItem.nickname_l = tHeroSuoXie.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
                     }
                     catch (Exception ex)
                     {
                         Msg("********NULL:hero-get-Replays_GetHeroData_Detail-ID-1-{0}-EX:{1}", heroItem.Key, ex.Message);
                         ex = null;
+
+                        //魅惑魔女 适配
+                        if (replaysId == "6")
+                            cVHeroItem.nickname_l = new string[] { "AS", "Enchantress", "Aiushtha", "小鹿" };
                     }
                 }
                 else
