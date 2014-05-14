@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+
 using Newtonsoft.Json;
 
 namespace Tup.Dota2Recipe.Spider.Entity
@@ -49,6 +50,17 @@ namespace Tup.Dota2Recipe.Spider.Entity
         [JsonIgnore]
         public string replays_id { get; set; }
         /// <summary>
+        /// replays 站 pageName keyName
+        /// </summary>
+        [JsonIgnore]
+        public string replays_pageName { get; set; }
+        /// <summary>
+        /// replays 站 技能列表
+        /// </summary>
+        [JsonIgnore]
+        public Dictionary<int, ReplaysHeroSkillItem> replays_skill { get; set; }
+
+        /// <summary>
         /// 昵称/别称
         /// </summary>
         /// <remarks>
@@ -59,10 +71,45 @@ namespace Tup.Dota2Recipe.Spider.Entity
         /// 本英雄统计参数信息
         /// </summary>
         public HeroStatsItem statsall { get; set; }
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public override string ToString()
         {
             return string.Format("[HeroSimpleItem name:{0},{1} atk:{2},{3}]", name, name_l, atk, atk_l);
+        }
+    }
+    /// <summary>
+    /// replays 站 英雄技能实体
+    /// </summary>
+    public class ReplaysHeroSkillItem
+    {
+        /// <summary>
+        /// 技能 ID
+        /// </summary>
+        public int SkillID { get; set; }
+        /// <summary>
+        /// 缩写, 快捷键
+        /// </summary>
+        public string SouXie { get; set; }
+        /// <summary>
+        /// 中文技能名称
+        /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
+        /// Dota2 官方技能 索引名称
+        /// </summary>
+        public string key_name { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return string.Format("[ReplaysHeroSkillItem Name:{0} SkillID:{1} SouXie:{2}]", Name, SkillID, SouXie);
         }
     }
     /// <summary>
@@ -104,7 +151,10 @@ namespace Tup.Dota2Recipe.Spider.Entity
         /// 英雄 推荐装备
         /// </summary>
         public IDictionary<string, string[]> itembuilds { get; set; }
-
+        /// <summary>
+        /// Replays 推荐技能加点
+        /// </summary>
+        public ReplaysAbilitySkillItem[] skillup { get; set; }
         /// <summary>
         /// 
         /// </summary>

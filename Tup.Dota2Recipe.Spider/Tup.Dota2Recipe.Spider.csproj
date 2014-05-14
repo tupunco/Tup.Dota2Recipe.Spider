@@ -51,9 +51,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common\ConcurrentConsumerQueue.cs" />
     <Compile Include="Common\JsonUtil.cs" />
     <Compile Include="Common\LogHelper.cs" />
-    <Compile Include="Common\SingleThreadQueue.cs" />
     <Compile Include="Common\ThrowHelper.cs" />
     <Compile Include="Entity\AbilityItem.cs" />
     <Compile Include="Entity\HeroItem.cs" />

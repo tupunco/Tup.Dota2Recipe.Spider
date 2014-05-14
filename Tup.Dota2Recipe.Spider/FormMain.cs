@@ -31,6 +31,10 @@ namespace Tup.Dota2Recipe.Spider
         private static readonly string s_Dota2SteamMedia = "http://cdn.dota2.com/apps/dota2/images";
 
         /// <summary>
+        /// GB2312 Encoding
+        /// </summary>
+        private static readonly Encoding s_GB2312Encoding = Encoding.GetEncoding("GB2312");
+        /// <summary>
         /// 技能图片
         /// </summary>
         private static readonly string s_GetImageAbilitiesUri = s_Dota2SteamMedia + "/abilities/{0}_hp1.png";
@@ -50,6 +54,10 @@ namespace Tup.Dota2Recipe.Spider
         /// 英雄肖像(Vert)图片
         /// </summary>
         private static readonly string s_GetImageHeroesVertUri = s_Dota2SteamMedia + "/heroes/{0}_vert.jpg";
+        /// <summary>
+        /// 英雄肖像(Icon/标识)图片
+        /// </summary>
+        private static readonly string s_GetImageHeroesIconUri = "http://www.dota2.com.cn/images/heroes/{0}_icon.png";
         /// <summary>
         /// 物品图片
         /// </summary>
@@ -85,13 +93,156 @@ namespace Tup.Dota2Recipe.Spider
         /// </summary>
         private static readonly string s_Replays_GetHeroData_List_Uri = @"http://dota2.replays.net/hero/";
         /// <summary>
-        /// replays.net GetHeroData_Detail
+        /// replays.net GetHeroData_Detail AJAX
         /// </summary>
         private static readonly string s_Replays_GetHeroData_Detail_Uri = s_Replays_GetHeroData_List_Uri + @"services/heroData.ashx?heroID={0}";
         /// <summary>
-        /// replays.net GetHeroData_List 正则
+        /// replays.net GetHeroData_Detail HTML 英雄详细页面
         /// </summary>
-        private static readonly string s_Replays_GetHeroData_List_Reg = @"<li\s+data-heroid=""(?<id>\d+)""\s+data-type=""[^""]+"">\s*<a\s+href=""[^""]+""\s+target=""_blank"">\s*<img\s+src=""http://rnimg\.cn/dota2/images/heros/(?<keyname>[^""]+)_sb\.png""\s+alt=""(?<name1>[^""]+)"">\s*</a>\s*<em>\s*<a\s+href=""[^""]+""\s+target=""_blank"">[^<]+</a>\s*</em>\s*</li>";
+        private static readonly string s_Replays_GetHeroData_Html_Detail_Uri = s_Replays_GetHeroData_List_Uri + @"html/{0}.shtml";
+        /// <summary>
+        /// replays.net GetHeroData_List HTML 正则
+        /// </summary>
+        private static readonly string s_Replays_GetHeroData_List_Reg = @"<li\s+data-heroid=""(?<id>\d+)""\s+data-type=""[^""]+"">\s*<a\s+href=""[^""]+""\s+target=""_blank"">\s*<img\s+src=""http://rnimg\.cn/dota2/images/heros/(?<keyname>[^""]+)_sb\.(?:png|jpg)""\s+alt=""(?<name1>[^""]+)"">\s*</a>\s*<em>\s*<a\s+href=""/hero/html/(?<pagename>.+)\.shtml""\s+target=""_blank"">[^<]+</a>\s*</em>\s*</li>";
+        /// <summary>
+        /// replays.net GetHeroData_Detail HTML Skill 正则 英雄详细页面-技能加点
+        /// </summary>
+        /// <remarks>
+        /// groupName/skillId/desc
+        /// </remarks>
+        private static readonly string s_Replays_GetHeroData_Detail_Skill_Reg = @"<div\s+class='Hero-tops-box'>\s*<h3>\s*?(?<groupName>[^<]+)\s*?</h3>\s*<div\s+class='Hero-img-list'>\s*?(?<skillGroup><img\s+id='only-\d+'\s+data-skill='(?<skillId>\d+)'\s+src=""http://dota2.replays.net/hero/images/[^""]+""[^>]+/>)+\s*?</div>\s*<div\s+class='Hero-text-box'>\s*?(?<desc>[\s\S]*?)\s*?</div>\s*</div>";
+        /// <summary>
+        /// replays.net 英雄技能名称到 Dota2 官方数据名称转换 映射字典
+        /// </summary>
+        private static readonly Dictionary<string, Dictionary<string, string>> s_Replays_HeroDataAbilityName_Convert_Map
+            = new Dictionary<string, Dictionary<string, string>>() 
+            { 
+                #region Replays_AbilityName_Convert_Map
+                {"bane",
+                    new Dictionary<string, string>(){
+                        {"恶魔之握", "魔爪"}
+                    }
+                },
+                {"crystal_maiden",
+                    new Dictionary<string, string>(){
+                        {"秘法光环", "奥术光环"}
+                    }
+                },
+                {"earthshaker",
+                    new Dictionary<string, string>(){
+                        {"加强图腾", "强化图腾"}
+                    }
+                },
+                {"pudge",
+                    new Dictionary<string, string>(){
+                        {"堆积腐肉", "腐肉堆积"}
+                    }
+                },
+                {"tiny",
+                    new Dictionary<string, string>(){
+                        {"长大！", "长大"}
+                    }
+                },
+                {"windrunner",
+                    new Dictionary<string, string>(){
+                        {"火力聚焦", "集中火力"}
+                    }
+                },
+                {"kunkka",
+                    new Dictionary<string, string>(){
+                        {"地图地标", "X标记"}
+                    }
+                },
+                {"lich",
+                    new Dictionary<string, string>(){
+                        {"邪恶祭祀", "牺牲"}
+                    }
+                },
+                {"lion",
+                    new Dictionary<string, string>(){
+                        {"法力汲取", "法力吸取"}
+                    }
+                },
+                {"skeleton_king",
+                    new Dictionary<string, string>(){
+                        {"冥火暴击", "冥火爆击"},
+                        {"致命一击", "殊死一搏"}
+                    }
+                },
+                {"batrider",
+                    new Dictionary<string, string>(){
+                        {"黏性燃油", "粘性燃油"},
+                        {"烈焰冲击波", "烈焰破击"}
+                    }
+                },
+                {"ancient_apparition",
+                    new Dictionary<string, string>(){
+                        {"寒冰之触", "极寒之触"}
+                    }
+                },
+                {"alchemist",
+                    new Dictionary<string, string>(){
+                        {"地精的贪婪", "贪魔的贪婪"}
+                    }
+                },
+                {"lycan",
+                    new Dictionary<string, string>(){
+                        {"变狼", "变形"}
+                    }
+                },
+                {"chaos_knight",
+                    new Dictionary<string, string>(){
+                        {"致命一击", "混沌一击"}
+                    }
+                },
+                {"visage",
+                    new Dictionary<string, string>(){
+                        {"守墓人的斗篷", "陵卫斗篷"}
+                    }
+                },
+                {"slark",
+                    new Dictionary<string, string>(){
+                        {"能量转换", "能量转移"}
+                    }
+                },
+                {"magnataur",
+                    new Dictionary<string, string>(){
+                        {"獠牙冲刺", "巨角冲撞"}
+                    }
+                },
+                {"shredder",
+                    new Dictionary<string, string>(){
+                        {"伐木链锯", "伐木锯链"}
+                    }
+                },
+                {"tusk",
+                    new Dictionary<string, string>(){
+                        {"海象挥击", "海象神拳！"}
+                    }
+                },
+                {"skywrath_mage",
+                    new Dictionary<string, string>(){
+                        {"秘法箭", "秘法鹰隼"}
+                    }
+                },
+                {"abaddon",
+                    new Dictionary<string, string>(){
+                        {"霜寒之剑", "魔霭诅咒"}
+                    }
+                },
+                {"elder_titan",
+                    new Dictionary<string, string>(){
+                        {"先祖之魂", "星体游魂"},
+                        {"先祖之魂回归", "星体游魂回归"}
+                    }
+                },
+                {"legion_commander",
+                    new Dictionary<string, string>(){
+                        {"压制", "强攻"}
+                    }
+                }
+                #endregion
+            };
 
         /// <summary>
         /// 英雄列表筛选 正则
@@ -122,6 +273,19 @@ namespace Tup.Dota2Recipe.Spider
         /// {0}\hero-{1}.json
         /// </summary>
         private static readonly string s_ToJsonFile_HeroDetial = @"{0}\hero-{1}.json";
+
+        /// <summary>
+        /// Dota2 客户端资源中物品 keyname 转换到网站对应项 映射字典
+        /// </summary>
+        private static readonly Dictionary<string, string> s_Dota2Itembuilds_KeyName_Convert_Map = new Dictionary<string, string>() {
+            {"gauntlet", "gauntlets"}, //力量手套
+            {"assault_cuirass", "assault"}, //强袭胸甲
+            {"shivas", "shivas_guard"}, //希瓦的守护
+            {"circlet_of_nobility", "circlet"}, //圆环
+            {"branch", "branches"}, //铁树枝干
+            {"desolater", "desolator"}, //黯灭
+            {"veil_of_discard", "veil_of_discord"}, //纷争面纱
+        };
 
         #region GetHerosData Button
         /// <summary>
@@ -250,73 +414,8 @@ namespace Tup.Dota2Recipe.Spider
             Msg("hero-get-HTML-end");
             #endregion
 
-            #region replays.net-HeroList
-            Msg("hero-get-Replays_GetHeroData_List-begion");
-            var lReplaysHeroDataHtmlBytes = await http.GetByteArrayAsync(s_Replays_GetHeroData_List_Uri);
-            if (lReplaysHeroDataHtmlBytes != null && lReplaysHeroDataHtmlBytes.Length > 0)
-            {
-                var lReplaysHeroDataHtml_Reg = new Regex(s_Replays_GetHeroData_List_Reg, RegexOptions.IgnoreCase | RegexOptions.Multiline);
-                var m = lReplaysHeroDataHtml_Reg.Match(Encoding.GetEncoding("GB2312").GetString(lReplaysHeroDataHtmlBytes));
-                var tmKeyname = string.Empty;
-                while (m.Success)
-                {
-                    //earth_spirit   earth
-                    //ember_spirit	ember
-                    HeroItem tHero = null;
-                    tmKeyname = m.Groups["keyname"].Value;
-                    if (tmKeyname == "earth")
-                        tmKeyname = "earth_spirit";
-                    else if (tmKeyname == "ember")
-                        tmKeyname = "ember_spirit";
-
-                    if (!heroDic.TryGetValue(tmKeyname, out tHero))
-                        Msg("********NULL:hero-get-Replays_GetHeroData_List-HTML-2-{0}", tmKeyname);
-                    else
-                        tHero.replays_id = m.Groups["id"].Value;
-
-                    m = m.NextMatch();
-                }
-            }
-            else
-                Msg("********NULL:hero-get-Replays_GetHeroData_List-HTML-1");
-
-            Msg("hero-get-Replays_GetHeroData_List-end");
-            #endregion
-
-            #region replays.net-HeroDetail JSON
-            Msg("hero-get-Replays_GetHeroData_Detail-begion");
-            foreach (var heroItem in heroDic)
-            {
-                var cVHeroItem = heroItem.Value;
-                var replaysId = cVHeroItem.replays_id;
-                if (!string.IsNullOrEmpty(replaysId))
-                {
-                    try
-                    {
-                        var tGetHeroData_Detail_Uri = string.Format(s_Replays_GetHeroData_Detail_Uri, replaysId);
-
-                        Msg("hero-get-Replays_GetHeroData_Detail-{0}", tGetHeroData_Detail_Uri);
-
-                        var replays = JObject.Parse(await http.GetStringAsync(tGetHeroData_Detail_Uri));
-                        var tHeroSuoXie = replays["heroData"]["HeroSuoXie"].Value<string>();
-                        if (replaysId == "66")
-                            tHeroSuoXie += ",骷髅王";
-                        cVHeroItem.nickname_l = tHeroSuoXie.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-                    }
-                    catch (Exception ex)
-                    {
-                        Msg("********NULL:hero-get-Replays_GetHeroData_Detail-ID-1-{0}-EX:{1}", heroItem.Key, ex.Message);
-                        ex = null;
-
-                        //魅惑魔女 适配
-                        if (replaysId == "6")
-                            cVHeroItem.nickname_l = new string[] { "AS", "Enchantress", "Aiushtha", "小鹿" };
-                    }
-                }
-                else
-                    Msg("********NULL:hero-get-Replays_GetHeroData_Detail-ID-2-{0}", heroItem.Key);
-            }
-            Msg("hero-get-Replays_GetHeroData_Detail-end");
+            #region 从 replays.net 获取英雄数据信息(别名/技能加点)
+            await GetHeroDataFromReplays(heroDic);
             #endregion
 
             #region HeroDetail/Ability
@@ -345,6 +444,195 @@ namespace Tup.Dota2Recipe.Spider
             //LogHelper.LogDebug("ButtonGetHeroData_Click-{0}-\r\n{1}", heroDic, JsonUtil.Serialize(heroDic));
         }
         /// <summary>
+        /// 从 replays.net 获取英雄数据信息(别名/技能加点)
+        /// </summary>
+        /// <param name="heroDic"></param>
+        /// <returns></returns>
+        private async Task GetHeroDataFromReplays(Dictionary<string, HeroItem> heroDic)
+        {
+            ThrowHelper.ThrowIfNull(heroDic, "heroDic");
+
+            var http = new HttpClient();
+
+            #region replays.net-HeroList
+            Msg("hero-get-Replays_GetHeroData_List-begion");
+            var lReplaysHeroDataHtmlBytes = await http.GetByteArrayAsync(s_Replays_GetHeroData_List_Uri);
+            if (lReplaysHeroDataHtmlBytes != null && lReplaysHeroDataHtmlBytes.Length > 0)
+            {
+                var lReplaysHeroDataHtml_Reg = new Regex(s_Replays_GetHeroData_List_Reg, RegexOptions.IgnoreCase | RegexOptions.Multiline);
+                var m = lReplaysHeroDataHtml_Reg.Match(s_GB2312Encoding.GetString(lReplaysHeroDataHtmlBytes));
+                var tmKeyname = string.Empty;
+                while (m.Success)
+                {
+                    //earth_spirit   earth
+                    //ember_spirit	ember
+                    HeroItem tHero = null;
+                    tmKeyname = m.Groups["keyname"].Value;
+                    if (tmKeyname == "earth") //大地之灵
+                        tmKeyname = "earth_spirit";
+                    else if (tmKeyname == "ember") //灰烬之灵
+                        tmKeyname = "ember_spirit";
+                    else if (tmKeyname == "legion") //军团指挥官
+                        tmKeyname = "legion_commander";
+                    else if (tmKeyname == "tb") //恐怖利刃
+                        tmKeyname = "terrorblade";
+
+                    if (!heroDic.TryGetValue(tmKeyname, out tHero))
+                        Msg("********NULL:hero-get-Replays_GetHeroData_List-HTML-2-{0}", tmKeyname);
+                    else
+                    {
+                        tHero.replays_id = m.Groups["id"].Value;
+                        tHero.replays_pageName = m.Groups["pagename"].Value;
+                    }
+
+                    m = m.NextMatch();
+                }
+            }
+            else
+                Msg("********NULL:hero-get-Replays_GetHeroData_List-HTML-1");
+
+            Msg("hero-get-Replays_GetHeroData_List-end");
+            #endregion
+
+            #region replays.net-HeroDetail JSON
+            Msg("hero-get-Replays_GetHeroData_Detail-begion");
+            foreach (var heroItem in heroDic)
+            {
+                var cVHeroItem = heroItem.Value;
+                var replaysId = cVHeroItem.replays_id;
+                if (!string.IsNullOrEmpty(replaysId))
+                {
+                    try
+                    {
+                        if (replaysId == "6") //魅惑魔女 适配(replays.net AJAX 加载异常)
+                        {
+                            #region 魅惑魔女 适配
+                            cVHeroItem.nickname_l = new string[] { "AS", "Enchantress", "Aiushtha", "小鹿" };
+                            //cVHeroItem.replays_id = "6";
+                            //cVHeroItem.replays_pageName = "AS";
+                            cVHeroItem.replays_skill = new Dictionary<int, ReplaysHeroSkillItem>()
+                            {
+                                {11, 
+                                    new ReplaysHeroSkillItem()
+                                    {
+                                        Name = "不可侵犯",
+                                        SkillID = 11,
+                                        SouXie = "U"
+                                    }
+                                },
+                                {12, 
+                                    new ReplaysHeroSkillItem()
+                                    {
+                                        Name = "魅惑",
+                                        SkillID = 12,
+                                        SouXie = "C"
+                                    }
+                                },
+                                {13, 
+                                    new ReplaysHeroSkillItem()
+                                    {
+                                        Name = "自然之助",
+                                        SkillID = 13,
+                                        SouXie = "R"
+                                    }
+                                },
+                                {14, 
+                                    new ReplaysHeroSkillItem()
+                                    {
+                                        Name = "推进",
+                                        SkillID = 14,
+                                        SouXie = "T"
+                                    }
+                                }
+                            };
+                            #endregion
+                        }
+                        else
+                        {
+                            var tGetHeroData_Detail_Ajax_Uri = string.Format(s_Replays_GetHeroData_Detail_Uri, replaysId);
+                            Msg("hero-get-Replays_GetHeroData_AJAX_Detail-{0}", tGetHeroData_Detail_Ajax_Uri);
+                            var replaysHeroData_Detail_Ajax = JObject.Parse(await http.GetStringAsync(tGetHeroData_Detail_Ajax_Uri));
+
+                            #region 昵称,别名
+                            var tHeroSuoXie = replaysHeroData_Detail_Ajax["heroData"]["HeroSuoXie"].Value<string>();
+                            if (replaysId == "66")
+                                tHeroSuoXie += ",骷髅王";
+                            cVHeroItem.nickname_l = tHeroSuoXie.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                            #endregion
+
+                            #region 技能列表
+                            var tHeroSkillObj = replaysHeroData_Detail_Ajax["heroSkill"];
+                            var tHeroSkillList = new Dictionary<int, ReplaysHeroSkillItem>();
+                            var skillID = 0;
+                            foreach (var skillItem in tHeroSkillObj)
+                            {
+                                skillID = skillItem.Value<int>("SkillID");
+                                if (skillID <= 0)
+                                {
+                                    Msg("********NULL:hero-get-Replays_GetHeroData_Detail-ID-2-{0}-skillID==0", heroItem.Key);
+                                    continue;
+                                }
+
+                                tHeroSkillList[skillID] = new ReplaysHeroSkillItem()
+                                {
+                                    SkillID = skillID,
+                                    Name = skillItem.Value<string>("Name"),
+                                    SouXie = skillItem.Value<string>("SouXie"),
+                                };
+                            }
+                            cVHeroItem.replays_skill = tHeroSkillList;
+                            #endregion
+                        }
+
+                        #region 技能加点
+                        FixReplaysHeroDataSkillName(cVHeroItem);//适配 replays.net 技能名称
+
+                        var tGetHeroData_Html_Detail_Uri = string.Format(s_Replays_GetHeroData_Html_Detail_Uri, cVHeroItem.replays_pageName);
+
+                        Msg("hero-get-Replays_GetHeroData_HTML_Detail-{0}", tGetHeroData_Html_Detail_Uri);
+
+                        var replaysHeroDataDetailHtmlBytes = await http.GetByteArrayAsync(tGetHeroData_Html_Detail_Uri);
+                        if (replaysHeroDataDetailHtmlBytes != null && replaysHeroDataDetailHtmlBytes.Length > 0)
+                        {
+                            var replaysHeroDataDetailHtml_Reg = new Regex(s_Replays_GetHeroData_Detail_Skill_Reg, RegexOptions.IgnoreCase | RegexOptions.Multiline);
+                            var m = replaysHeroDataDetailHtml_Reg.Match(s_GB2312Encoding.GetString(replaysHeroDataDetailHtmlBytes));
+                            var skillup = new List<ReplaysAbilitySkillItem>();
+
+                            while (m.Success)
+                            {
+                                var item = new ReplaysAbilitySkillItem()
+                                {
+                                    groupName = m.Groups["groupName"].Value,
+                                    desc = ItemUtils.Common_FixBrHtml(m.Groups["desc"].Value),
+                                    skillIDs = m.Groups["skillId"]
+                                                    .Captures
+                                                    .Cast<Capture>()
+                                                    .Select(xx => Convert.ToInt32(xx.Value))
+                                                    .ToList(),
+                                };
+
+                                if (item.skillIDs != null && item.skillIDs.Count > 0)
+                                    skillup.Add(item);
+
+                                m = m.NextMatch();
+                            }
+                            cVHeroItem.skillup = skillup.ToArray();
+                        }
+                        #endregion
+                    }
+                    catch (Exception ex)
+                    {
+                        Msg("********NULL:hero-get-Replays_GetHeroData_Detail-ID-1-{0}-EX:{1}", heroItem.Key, ex.Message);
+                        ex = null;
+                    }
+                }
+                else
+                    Msg("********NULL:hero-get-Replays_GetHeroData_Detail-ID-2-{0}", heroItem.Key);
+            }
+            Msg("hero-get-Replays_GetHeroData_Detail-end");
+            #endregion
+        }
+        /// <summary>
         /// 英雄详细/技能/英雄头像/技能图片 获取
         /// </summary>
         /// <param name="heroDic"></param>
@@ -356,15 +644,18 @@ namespace Tup.Dota2Recipe.Spider
             var dota2ItembuildsPath = this.TextBoxDota2Itembuilds.Text;
             ThrowHelper.ThrowIfFalse(Directory.Exists(dota2ItembuildsPath), "dota2ItembuildsPath");
 
-            var heroDetailDir = "hero_detail";
-            var abilitiesFilesDir = "abilities_images";
-            var heroesFilesDir = "heroes_images";
+            var heroDetailDir = "hero_detail"; //英雄详细 JSON 保存路径
+            var abilitiesFilesDir = "abilities_images"; //英雄技能 保存路径
+            var heroesFilesDir = "heroes_images"; //英雄头像 保存路径
+            var heroesIconFilesDir = "heroes_icons"; //英雄头像 ICON 标识 保存路径
             if (!Directory.Exists(heroDetailDir))
                 Directory.CreateDirectory(heroDetailDir);
             if (!Directory.Exists(abilitiesFilesDir))
                 Directory.CreateDirectory(abilitiesFilesDir);
             if (!Directory.Exists(heroesFilesDir))
                 Directory.CreateDirectory(heroesFilesDir);
+            if (!Directory.Exists(heroesIconFilesDir))
+                Directory.CreateDirectory(heroesIconFilesDir);
 
             var http = new HttpClient();
             var abilityDic = new Dictionary<string, AbilityItem>();
@@ -421,16 +712,52 @@ namespace Tup.Dota2Recipe.Spider
             //s_RegGetHeroItemDataDetailStatsHtml
             var regStatsHtml = new Regex(s_RegGetHeroItemDataStatsHtml, RegexOptions.IgnoreCase);
             var regDetailStatsHtml = new Regex(s_RegGetHeroItemDataDetailStatsHtml, RegexOptions.IgnoreCase);
-            //英雄技能列表
             foreach (var heroItem in heroDic)
             {
                 Msg("hero-get-DetailAndAbility-Hero:{0}", heroItem.Key);
 
                 var cVHeroItem = heroItem.Value;
+
+                #region 英雄技能
                 cVHeroItem.abilities = abilityDic
                                             .Where(x => x.Value.hurl == cVHeroItem.keyUri_name)
                                             .Select(x => x.Value)
                                             .ToArray();
+
+                if (cVHeroItem.abilities != null && cVHeroItem.abilities.Length > 0
+                    && cVHeroItem.replays_skill != null && cVHeroItem.replays_skill.Count > 0)
+                {
+                    //关联 replays 技能与 Dota2 官方技能
+                    cVHeroItem.replays_skill.Values
+                        .ToList().ForEach(x =>
+                        {
+                            var cSkill = cVHeroItem.abilities.FirstOrDefault(xx => xx.dname == x.Name);
+                            if (cSkill != null)
+                                x.key_name = cSkill.key_name;
+                            else
+                                Msg("********NULL:hero-get-DetailAndAbility-Hero-replays_skill/abilities:{0}-{1}", heroItem.Key, x);
+                        });
+
+                    //填充技能加点 技能 key_name
+                    if (cVHeroItem.skillup != null && cVHeroItem.skillup.Length > 0)
+                    {
+                        Array.ForEach(cVHeroItem.skillup, suItem =>
+                        {
+                            suItem.abilityKeys = suItem.skillIDs.Select(siItem =>
+                            {
+                                if (siItem <= 0)
+                                    return "attribute_bonus"; //黄点
+                                else
+                                    return cVHeroItem.replays_skill[siItem].key_name;
+                            }).ToArray();
+                        });
+                    }
+                }
+                else
+                {
+                    Msg("********NULL:hero-get-DetailAndAbility-Hero-replays_skill/abilities:{0}", heroItem.Key);
+                }
+                #endregion
 
                 #region 英雄详细信息
                 try
@@ -496,6 +823,20 @@ namespace Tup.Dota2Recipe.Spider
                         var imgUrl = string.Format(s_GetImageHeroesFullUri, heroItem.Key);
                         s_DownloadImageQueue.Enqueue(Tuple.Create(http, imgUrl, string.Format(@"{0}\{1}_full.png", heroesFilesDir, heroItem.Key)));
 
+                        //INFO:完美官方 ICON 获取 keyname 差异适配
+                        //噬魂鬼 life_stealer->life_lifestealer
+                        //末日使者 doom_bringer->doom
+                        //风行者 windrunner->windranger
+                        var cnIconKeyName = heroItem.Key;
+                        if (cnIconKeyName == "life_stealer")
+                            cnIconKeyName = "life_lifestealer";
+                        else if (cnIconKeyName == "doom_bringer")
+                            cnIconKeyName = "doom";
+                        else if (cnIconKeyName == "windrunner")
+                            cnIconKeyName = "windranger";
+                        imgUrl = string.Format(s_GetImageHeroesIconUri, cnIconKeyName);
+                        s_DownloadImageQueue.Enqueue(Tuple.Create(http, imgUrl, string.Format(@"{0}\{1}_icon.png", heroesIconFilesDir, heroItem.Key)));
+
                         //imgUrl = string.Format(s_GetImageHeroesVertUri, heroItem.Key);
                         //s_DownloadImageQueue.Enqueue(Tuple.Create(http, imgUrl, string.Format(@"{0}\{1}_vert.jpg", heroesFilesDir, heroItem.Key)));
 
@@ -532,7 +873,7 @@ namespace Tup.Dota2Recipe.Spider
         /// </summary>
         /// <param name="heroKeyname"></param>
         /// <remarks>
-        /// 从dota2客户端资源加载
+        /// 从 Dota2 客户端资源加载
         /// </remarks>
         private IDictionary<string, string[]> GetHeroDetailItembuilds(string heroKeyname, string dota2ItembuildsPath)
         {
@@ -603,7 +944,7 @@ namespace Tup.Dota2Recipe.Spider
         /// <param name="sysItemsList"></param>
         /// <param name="itembuilds"></param>
         /// <remarks>
-        /// dot2 客户端资源内的keyname, 有稍许不同
+        /// dota2 客户端资源内的 keyname, 有稍许不同
         /// </remarks>
         private void CheckHeroDetailItembuilds(Dictionary<string, ItemsItem> sysItemsList, string heroKeyName, IDictionary<string, string[]> itembuilds)
         {
@@ -615,21 +956,13 @@ namespace Tup.Dota2Recipe.Spider
             Msg("---------CheckHeroDetailItembuilds-----------Hero:{0}---", heroKeyName);
 
             ItemsItem tItemsItem = null;
-            //--------------------------
-            //gauntlet:	gauntlets
-            //assault_cuirass:	assault
-            //shivas:		shivas_guard
             foreach (var item in itembuilds)
             {
                 for (int i = 0; i < item.Value.Length; i++)
                 {
                     var cItems = item.Value[i];
-                    if (cItems == "gauntlet")
-                        cItems = "gauntlets";
-                    else if (cItems == "assault_cuirass")
-                        cItems = "assault";
-                    else if (cItems == "shivas")
-                        cItems = "shivas_guard";
+
+                    cItems = GetFixedHeroDetailItembuildsName(cItems);
 
                     if (cItems != item.Value[i])
                         item.Value[i] = cItems;
@@ -649,6 +982,45 @@ namespace Tup.Dota2Recipe.Spider
                     }
                 }
             }
+        }
+        /// <summary>
+        /// 适配 replays.net 技能名称
+        /// </summary>
+        /// <param name="cVHeroItem"></param>
+        private void FixReplaysHeroDataSkillName(HeroItem cVHeroItem)
+        {
+            ThrowHelper.ThrowIfNull(cVHeroItem, "cVHeroItem");
+
+            if (cVHeroItem.replays_skill == null)
+                return;
+
+            Dictionary<string, string> mapDic = null;
+            if (!s_Replays_HeroDataAbilityName_Convert_Map.TryGetValue(cVHeroItem.key_name, out mapDic)
+                || mapDic == null || mapDic.Count <= 0)
+            {
+                return;
+            }
+
+            string tName = null;
+            foreach (var skillItem in cVHeroItem.replays_skill.Values)
+            {
+                if (mapDic.TryGetValue(skillItem.Name, out tName))
+                    skillItem.Name = tName;
+            }
+        }
+        /// <summary>
+        /// 获取适配过的 Dota2 客户端资源内的 keyname
+        /// </summary>
+        /// <param name="itemName"></param>
+        private string GetFixedHeroDetailItembuildsName(string itemName)
+        {
+            ThrowHelper.ThrowIfNull(itemName, "itemName");
+
+            string tItemName = null;
+            if (s_Dota2Itembuilds_KeyName_Convert_Map.TryGetValue(itemName, out tItemName))
+                return tItemName;
+            else
+                return itemName;
         }
         #endregion
 
@@ -1035,7 +1407,7 @@ namespace Tup.Dota2Recipe.Spider
         /// <summary>
         /// 统计提交队列
         /// </summary>
-        private class DownloadImageThreadQueue : SingleThreadQueue<Tuple<HttpClient, string, string>>
+        private class DownloadImageThreadQueue : ConcurrentConsumerQueue<Tuple<HttpClient, string, string>>
         {
             /// <summary>
             /// 
@@ -1043,7 +1415,6 @@ namespace Tup.Dota2Recipe.Spider
             /// <param name="maxQueueLength"></param>
             /// <param name="threadSleepMilliseconds"></param>
             public DownloadImageThreadQueue(int maxQueueLength)
-                : base(maxQueueLength)
             {
             }
             /// <summary>
