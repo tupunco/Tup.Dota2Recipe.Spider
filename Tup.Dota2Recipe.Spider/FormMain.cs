@@ -1,4 +1,34 @@
-﻿using System;
+﻿/**
+ *            ,.-" "-.,
+ *           /   ===   \
+ *          /  =======  \
+ *       __|  (o)   (0)  |__      
+ *      / _|    .---.    |_ \         
+ *     | /.----/ O O \----.\ |       
+ *      \/     |     |     \/        
+ *      |                   |            
+ *      |                   |           
+ *      |                   |          
+ *      _\   -.,_____,.-   /_         
+ *  ,.-"  "-.,_________,.-"  "-.,
+ * /          |       |          \  
+ *|           l.     .l           | 
+ *|            |     |            |
+ *l.           |     |           .l             
+ * |           l.   .l           | \,     
+ * l.           |   |           .l   \,    
+ *  |           |   |           |      \,  
+ *  l.          |   |          .l        |
+ *   |          |   |          |         |
+ *   |          |---|          |         |
+ *   |          |   |          |         |
+ *   /"-.,__,.-"\   /"-.,__,.-"\"-.,_,.-"\
+ *  |            \ /            |         |
+ *  |             |             |         |
+ *   \__|__|__|__/ \__|__|__|__/ \_|__|__/ 
+ * from:http://www.chris.com/ascii/index.php?art=animals/gorillas
+ */
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
