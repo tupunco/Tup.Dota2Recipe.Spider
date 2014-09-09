@@ -160,7 +160,7 @@
             this.TextBoxDota2Itembuilds.Name = "TextBoxDota2Itembuilds";
             this.TextBoxDota2Itembuilds.Size = new System.Drawing.Size(285, 21);
             this.TextBoxDota2Itembuilds.TabIndex = 6;
-            this.TextBoxDota2Itembuilds.Text = "D:\\Program Files (x86)\\Steam\\steamapps\\common\\dota 2 beta\\dota\\itembuilds";
+            this.TextBoxDota2Itembuilds.Text = "F:\\Steam_Dota2\\SteamApps\\common\\dota 2 beta\\dota\\itembuilds";
             // 
             // MainForm
             // 
