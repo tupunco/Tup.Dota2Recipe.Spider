@@ -50,6 +50,10 @@ namespace Tup.Dota2Recipe.Spider.Entity
         /// </summary>
         public string attrib { get; set; }
         /// <summary>
+        /// notes
+        /// </summary>
+        public string notes { get; set; }
+        /// <summary>
         /// 魔法消耗
         /// </summary>
         public string mc { get; set; }

@@ -709,8 +709,9 @@ namespace Tup.Dota2Recipe.Spider
                     dname = cVAbilityItem["dname"].Value<string>(),
                     affects = ItemUtils.Common_FixBrHtml(cVAbilityItem["affects"].Value<string>()),
                     desc = ItemUtils.AbilityItem_FixDescField(cVAbilityItem["desc"].Value<string>()),
+                    notes = ItemUtils.AbilityItem_FixDescField(cVAbilityItem["notes"].Value<string>()),
                     dmg = ItemUtils.Common_FixBrHtml(cVAbilityItem["dmg"].Value<string>()),
-                    attrib = cVAbilityItem["attrib"].Value<string>(),
+                    attrib = ItemUtils.AbilityItem_FixAttribField(cVAbilityItem["attrib"].Value<string>()),
                     cmb = ItemUtils.AbilityItem_FixCmbField(cVAbilityItem["cmb"].Value<string>()),
                     lore = ItemUtils.Common_FixBrHtml(cVAbilityItem["lore"].Value<string>()),
                     hurl = cVAbilityItem["hurl"].Value<string>(),
@@ -1110,6 +1111,7 @@ namespace Tup.Dota2Recipe.Spider
 
                     cost = cVItem["cost"].Value<int>(),
                     desc = ItemUtils.Common_FixBrHtml(cVItem["desc"].Value<string>()),
+                    notes = ItemUtils.Common_FixBrHtml(cVItem["notes"].Value<string>()),
                     mc = cVItem["mc"].Value<string>(),
                     cd = cVItem["cd"].Value<int>(),
                     lore = cVItem["lore"].Value<string>(),
@@ -1465,6 +1467,7 @@ namespace Tup.Dota2Recipe.Spider
     {
         private static Regex s_RegAbilityItemCmb = new Regex(@"<div\s+class=""(?<type>mana|cooldown)"">\s*<img\s+alt=""(?<alt>.*?)""[^>]+?/>\s*(?<value>[\s\S]+?)\s*</div>", RegexOptions.IgnoreCase);
         private static Regex s_RegAbilityItemDesc = new Regex(@"color='(\#[\w]{6})'", RegexOptions.IgnoreCase);
+        private static Regex s_RegAbilityItemAttrib = new Regex(@"<span\s+class=""scepterVal"">([^>]*?)</span>", RegexOptions.IgnoreCase);
         private static Regex s_RegCommonBr2 = new Regex(@"(?:<br[^>]*?>\s*){2,}", RegexOptions.IgnoreCase);
         private static Regex s_RegCommonBrEnd = new Regex(@"<br[^>]*?>\s*$", RegexOptions.IgnoreCase);
         private static Regex s_RegCommonRN = new Regex(@"[\s]+(?=[<])|(?<=[>])[\s]+|[\r\n]+", RegexOptions.IgnoreCase);
@@ -1616,7 +1619,7 @@ namespace Tup.Dota2Recipe.Spider
             throw new NotSupportedException();
         }
         /// <summary>
-        /// 
+        /// fix AbilityItem Cmb Field
         /// </summary>
         /// <param name="html"></param>
         /// <returns></returns>
@@ -1640,7 +1643,7 @@ namespace Tup.Dota2Recipe.Spider
             return sb.ToString();
         }
         /// <summary>
-        /// 
+        /// fix AbilityItem Desc Field
         /// </summary>
         /// <param name="html"></param>
         /// <returns></returns>
@@ -1650,6 +1653,18 @@ namespace Tup.Dota2Recipe.Spider
                 return html;
 
             return s_RegAbilityItemDesc.Replace(html, @"color=""$1""");
+        }
+        /// <summary>
+        /// fix AbilityItem Attrib Field
+        /// </summary>
+        /// <param name="html"></param>
+        /// <returns></returns>
+        public static string AbilityItem_FixAttribField(string html)
+        {
+            if (string.IsNullOrEmpty(html))
+                return html;
+
+            return s_RegAbilityItemAttrib.Replace(html, @"<span class=""scepterVal""><font color=""#6fe771"">$1</font></span>");
         }
         /// <summary>
         /// 归置 HTML 内 Br, 末尾/中间多个/

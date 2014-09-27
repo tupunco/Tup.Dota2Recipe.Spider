@@ -41,6 +41,10 @@ namespace Tup.Dota2Recipe.Spider.Entity
         public string affects { get; set; }
         public string desc { get; set; }
         public string dmg { get; set; }
+        /// <summary>
+        /// notes
+        /// </summary>
+        public string notes { get; set; }
         public string attrib { get; set; }
         /// <summary>
         /// 冷却时间/魔法消耗
