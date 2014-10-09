@@ -74,8 +74,8 @@ namespace Tup.Dota2Recipe.Spider
             if (qmapObjectValue == null || qmapObjectValue.Value == null || qmapObjectValue.Value.Count <= 0)
                 return null;
 
-            var pair = qmapObjectValue.Value.Find(x => x.Key == key);
-            if (pair != null)
+            QMapPair pair = null;
+            if (qmapObjectValue.Value.TryGetValue(key, out pair) && pair != null)
                 return pair.Value;
             else
                 return null;
@@ -145,7 +145,6 @@ namespace Tup.Dota2Recipe.Spider
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="script"></param>
         /// <param name="index"></param>
         /// <param name="success"></param>
         /// <returns></returns>
@@ -194,7 +193,7 @@ namespace Tup.Dota2Recipe.Spider
                         return new QMapPair()
                         {
                             Key = name,
-                            Value = new QMapValue() { Value = value }
+                            Value = new QMapValue() { Value = new List<string>(1) { value } }
                         };
                     }
                     else
@@ -238,14 +237,13 @@ namespace Tup.Dota2Recipe.Spider
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="script"></param>
         /// <param name="index"></param>
         /// <param name="success"></param>
         /// <returns></returns>
         private QMapObjectValue ParseObject(ref int index, ref bool success)
         {
             var token = QMapToken.None;
-            var outValue = new List<QMapPair>();
+            var outValue = new Dictionary<string, QMapPair>(StringComparer.OrdinalIgnoreCase);
             EatLineWhitespace(ref index);
             // {
             NextToken(ref index);
@@ -271,14 +269,30 @@ namespace Tup.Dota2Recipe.Spider
                         success = false;
                         return null;
                     }
-                    outValue.Add(pair);
+                    TryAddToObjectValue(outValue, pair);
                 }
             }
         }
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="script"></param>
+        /// <param name="objectValue"></param>
+        /// <param name="pair"></param>
+        private static void TryAddToObjectValue(Dictionary<string, QMapPair> objectValue, QMapPair pair)
+        {
+            if (objectValue == null || pair == null)
+                throw new System.ArgumentNullException("objectValue/pair");
+
+            var key = pair.Key;
+            QMapPair oPair = null;
+            if (objectValue.TryGetValue(key, out oPair))
+                oPair.Value.Value.AddRange(pair.Value.Value);
+            else
+                objectValue.Add(key, pair);
+        }
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="index"></param>
         /// <param name="success"></param>
         /// <returns></returns>
@@ -312,7 +326,6 @@ namespace Tup.Dota2Recipe.Spider
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="script"></param>
         /// <param name="commentType"></param>
         /// <param name="index"></param>
         /// <param name="success"></param>
@@ -374,7 +387,6 @@ namespace Tup.Dota2Recipe.Spider
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="script"></param>
         /// <param name="index"></param>
         /// <param name="success"></param>
         /// <returns></returns>
@@ -437,7 +449,6 @@ namespace Tup.Dota2Recipe.Spider
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="script"></param>
         /// <param name="index"></param>
         /// <returns></returns>
         private QMapToken LookAhead(int index)
@@ -447,7 +458,7 @@ namespace Tup.Dota2Recipe.Spider
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="script"></param>
+        /// <param name="crossline"></param>
         /// <param name="index"></param>
         /// <returns></returns>
         private QMapToken LookAhead(bool crossline, int index)
@@ -458,7 +469,6 @@ namespace Tup.Dota2Recipe.Spider
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="script"></param>
         /// <param name="index"></param>
         /// <returns></returns>
         private QMapToken NextToken(ref int index)
@@ -468,7 +478,6 @@ namespace Tup.Dota2Recipe.Spider
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="script"></param>
         /// <param name="crossline"></param>
         /// <param name="index"></param>
         /// <returns></returns>
@@ -522,7 +531,6 @@ namespace Tup.Dota2Recipe.Spider
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="script"></param>
         /// <param name="index"></param>
         private void EatWhitespace(ref int index)
         {
@@ -535,7 +543,6 @@ namespace Tup.Dota2Recipe.Spider
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="script"></param>
         /// <param name="index"></param>
         private void EatLineWhitespace(ref int index)
         {
@@ -576,14 +583,14 @@ namespace Tup.Dota2Recipe.Spider
         /// <summary>
         /// 
         /// </summary>
-        public string Value { get; internal set; }
+        public List<string> Value { get; internal set; }
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
         public override string ToString()
         {
-            return string.Format("\t\"{0}\"\n", this.Value);
+            return string.Format("\t\"{0}\"\n", string.Join(",", this.Value));
         }
     }
     /// <summary>
@@ -594,7 +601,7 @@ namespace Tup.Dota2Recipe.Spider
         /// <summary>
         /// 
         /// </summary>
-        public new List<QMapPair> Value { get; internal set; }
+        public new IDictionary<string, QMapPair> Value { get; internal set; }
         /// <summary>
         /// 
         /// </summary>
@@ -602,7 +609,7 @@ namespace Tup.Dota2Recipe.Spider
         public override string ToString()
         {
             if (this.Value != null)
-                return string.Format("\n{{\n{0}\n}}\n", string.Join<QMapPair>("", this.Value));
+                return string.Format("\n{{\n{0}\n}}\n", string.Join<QMapPair>("", this.Value.Values));
             else
                 return string.Empty;
         }

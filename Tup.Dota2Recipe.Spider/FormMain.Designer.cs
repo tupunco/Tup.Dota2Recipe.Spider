@@ -38,7 +38,7 @@
             this.GroupBoxHero = new System.Windows.Forms.GroupBox();
             this.LabelDota2Itembuilds = new System.Windows.Forms.Label();
             this.ButtonBrowserDota2Itembuilds = new System.Windows.Forms.Button();
-            this.TextBoxDota2Itembuilds = new System.Windows.Forms.TextBox();
+            this.TextBoxDota2Folder = new System.Windows.Forms.TextBox();
             this.GroupBoxHero.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -122,7 +122,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.GroupBoxHero.Controls.Add(this.LabelDota2Itembuilds);
             this.GroupBoxHero.Controls.Add(this.ButtonBrowserDota2Itembuilds);
-            this.GroupBoxHero.Controls.Add(this.TextBoxDota2Itembuilds);
+            this.GroupBoxHero.Controls.Add(this.TextBoxDota2Folder);
             this.GroupBoxHero.Controls.Add(this.CheckBoxHeroDetail);
             this.GroupBoxHero.Controls.Add(this.CheckBoxHeroImage);
             this.GroupBoxHero.Controls.Add(this.CheckBoxHeroAbilityImage);
@@ -137,9 +137,9 @@
             this.LabelDota2Itembuilds.AutoSize = true;
             this.LabelDota2Itembuilds.Location = new System.Drawing.Point(6, 92);
             this.LabelDota2Itembuilds.Name = "LabelDota2Itembuilds";
-            this.LabelDota2Itembuilds.Size = new System.Drawing.Size(95, 12);
+            this.LabelDota2Itembuilds.Size = new System.Drawing.Size(77, 12);
             this.LabelDota2Itembuilds.TabIndex = 8;
-            this.LabelDota2Itembuilds.Text = "Dota2Itembuilds";
+            this.LabelDota2Itembuilds.Text = "Dota2 Folder";
             // 
             // ButtonBrowserDota2Itembuilds
             // 
@@ -152,15 +152,15 @@
             this.ButtonBrowserDota2Itembuilds.UseVisualStyleBackColor = true;
             this.ButtonBrowserDota2Itembuilds.Click += new System.EventHandler(this.ButtonBrowerDota2Itembuilds_Click);
             // 
-            // TextBoxDota2Itembuilds
+            // TextBoxDota2Folder
             // 
-            this.TextBoxDota2Itembuilds.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.TextBoxDota2Folder.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.TextBoxDota2Itembuilds.Location = new System.Drawing.Point(107, 87);
-            this.TextBoxDota2Itembuilds.Name = "TextBoxDota2Itembuilds";
-            this.TextBoxDota2Itembuilds.Size = new System.Drawing.Size(285, 21);
-            this.TextBoxDota2Itembuilds.TabIndex = 6;
-            this.TextBoxDota2Itembuilds.Text = "F:\\Steam_Dota2\\SteamApps\\common\\dota 2 beta\\dota\\itembuilds";
+            this.TextBoxDota2Folder.Location = new System.Drawing.Point(107, 87);
+            this.TextBoxDota2Folder.Name = "TextBoxDota2Folder";
+            this.TextBoxDota2Folder.Size = new System.Drawing.Size(285, 21);
+            this.TextBoxDota2Folder.TabIndex = 6;
+            this.TextBoxDota2Folder.Text = "F:\\Steam_Dota2\\SteamApps\\common\\dota 2 beta\\dota";
             // 
             // MainForm
             // 
@@ -193,7 +193,7 @@
         private System.Windows.Forms.GroupBox GroupBoxHero;
         private System.Windows.Forms.Label LabelDota2Itembuilds;
         private System.Windows.Forms.Button ButtonBrowserDota2Itembuilds;
-        private System.Windows.Forms.TextBox TextBoxDota2Itembuilds;
+        private System.Windows.Forms.TextBox TextBoxDota2Folder;
     }
 }
 
