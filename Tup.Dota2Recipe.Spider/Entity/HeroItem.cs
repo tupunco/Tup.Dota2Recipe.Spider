@@ -233,5 +233,10 @@ namespace Tup.Dota2Recipe.Spider.Entity
         /// 攻击成长
         /// </summary>
         public double lv_dmg { get; set; }
+
+        /// <summary>
+        /// 初始 移动速度
+        /// </summary>
+        public double init_ms { get; set; }
     }
 }

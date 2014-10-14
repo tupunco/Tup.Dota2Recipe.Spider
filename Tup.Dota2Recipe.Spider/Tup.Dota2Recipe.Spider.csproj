@@ -51,11 +51,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common\CollectionHelper.cs" />
     <Compile Include="Common\ConcurrentConsumerQueue.cs" />
     <Compile Include="Common\JsonUtil.cs" />
     <Compile Include="Common\LogHelper.cs" />
     <Compile Include="Common\ThrowHelper.cs" />
     <Compile Include="Entity\AbilityItem.cs" />
+    <Compile Include="Entity\Dota2ResEntities.cs" />
     <Compile Include="Entity\HeroItem.cs" />
     <Compile Include="Entity\ItemsItem.cs" />
     <Compile Include="FormMain.cs">
@@ -67,6 +69,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SimpleQMapParser.cs" />
+    <Compile Include="Common\StringHelper.cs" />
     <EmbeddedResource Include="FormMain.resx">
       <DependentUpon>FormMain.cs</DependentUpon>
     </EmbeddedResource>

@@ -44,9 +44,13 @@ using Newtonsoft.Json.Linq;
 
 using Tup.Dota2Recipe.Spider.Common;
 using Tup.Dota2Recipe.Spider.Entity;
+using System.Diagnostics;
 
 namespace Tup.Dota2Recipe.Spider
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public partial class MainForm : Form
     {
         public MainForm()
@@ -59,6 +63,33 @@ namespace Tup.Dota2Recipe.Spider
         private static readonly string s_Dota2HostUri = "http://www.dota2.com";
         //private static readonly string s_Dota2SteamMedia = "http://media.steampowered.com/apps/dota2/images";
         private static readonly string s_Dota2SteamMedia = "http://cdn.dota2.com/apps/dota2/images";
+
+        /// <summary>
+        /// dotabuff github.com d2vpk project
+        /// </summary>
+        /// <remarks>
+        /// %Steam_Dota2%\SteamApps\common\dota 2 beta\dota\pak01_dir.vpk
+        /// 
+        /// 英雄:/dota_pak01/scripts/npc/npc_heroes.json
+        ///      https://github.com/dotabuff/d2vpk/raw/master/json/dota_pak01/scripts/npc/npc_heroes.json
+        /// 技能:/dota_pak01/scripts/npc/npc_abilities.json
+        ///      https://github.com/dotabuff/d2vpk/raw/master/json/dota_pak01/scripts/npc/npc_abilities.json
+        /// 物品:/dota_pak01/scripts/npc/items.json
+        ///      https://github.com/dotabuff/d2vpk/raw/master/json/dota_pak01/scripts/npc/items.json
+        /// </remarks>
+        private static readonly string s_GitHub_DotaBuff_D2vpk_Uri = "https://github.com/dotabuff/d2vpk/raw/master/json/dota_pak01/";
+        /// <summary>
+        /// JSON 格式 - Dota2 客户端 英雄 原始数据 Uri
+        /// </summary>
+        private static readonly string s_GitHub_DotaBuff_D2vpk_Heroes_Json_Uri = s_GitHub_DotaBuff_D2vpk_Uri + "scripts/npc/npc_heroes.json?v={0}";
+        /// <summary>
+        /// JSON 格式 - Dota2 客户端 技能 原始数据 Uri
+        /// </summary>
+        private static readonly string s_GitHub_DotaBuff_D2vpk_Abilities_Json_Uri = s_GitHub_DotaBuff_D2vpk_Uri + "scripts/npc/npc_abilities.json?v={0}";
+        /// <summary>
+        /// JSON 格式 - Dota2 客户端 技能 原始数据 Uri
+        /// </summary>
+        private static readonly string s_GitHub_DotaBuff_D2vpk_Items_Json_Uri = s_GitHub_DotaBuff_D2vpk_Uri + "scripts/npc/items.json?v={0}";
 
         /// <summary>
         /// GB2312 Encoding
@@ -317,6 +348,62 @@ namespace Tup.Dota2Recipe.Spider
             {"veil_of_discard", "veil_of_discord"}, //纷争面纱
         };
 
+        /// <summary>
+        /// Dota2 安装目录 下 itembuilds 文件夹
+        /// </summary>
+        private string m_Dota2ItembuildsPath = null;
+        /// <summary>
+        /// Dota2 安装目录 下 resource 文件夹
+        /// </summary>
+        private string m_Dota2ResourcePath = null;
+        /// <summary>
+        /// Dota2 安装目录 下 中文本地化语言文本(resource/dota_schinese.txt)
+        /// </summary>
+        private IDictionary<string, string> m_Dota2LangResource_Dota_Res = null;
+        /// <summary>
+        /// Dota2 安装目录 下 英语本地化语言文本(resource//dota_english.txt)
+        /// </summary>
+        private IDictionary<string, string> m_Dota2LangResource_Dota_English_Res = null;
+        /// <summary>
+        ///  Dota2 客户端资源 技能 资源
+        /// </summary>
+        private IDictionary<string, Dota2ResNpcAbilitiesItem> m_Dota2Res_NpcAbilities_Res = null;
+        /// <summary>
+        ///  Dota2 客户端资源 英雄 资源
+        /// </summary>
+        private IDictionary<string, Dota2ResNpcHeroesItem> m_Dota2Res_NpcHeroes_Res = null;
+        /// <summary>
+        ///  Dota2 客户端资源 物品 资源
+        /// </summary>
+        private IDictionary<string, Dota2ResItemsItem> m_Dota2Res_Items_Res = null;
+
+        /// <summary>
+        /// Dota2 客户端中文本地化语言文本资源前缀
+        /// </summary>
+        private static readonly string s_Dota2LangResource_Dota_Res_Lang_Prefix = "DOTA_Tooltip_";
+        ///// <summary>
+        ///// 物品-赤红甲-AbilitySpecial
+        ///// </summary>
+        ///// <remarks>
+        ///// https://github.com/dotabuff/d2vpk/blob/master/json/dota_pak01/scripts/npc/items.json#L2911
+        ///// </remarks>
+        //private static readonly IDictionary<string, object> s_Item_Crimson_Guard_AbilitySpecial
+        //    = new Dictionary<string, object>()
+        //    {
+        //        { "bonus_health", 250},
+        //        { "bonus_health_regen", 6},
+        //        { "bonus_all_stats", 2},
+        //        { "bonus_armor", 5},
+        //        { "block_chance", 80},
+        //        { "block_damage_melee", 40},
+        //        { "block_damage_ranged", 20},
+        //        { "bonus_aoe_armor", 2},
+        //        { "duration", 9},
+        //        { "bonus_aoe_radius", 750},
+        //        { "block_damage_melee_active", 50},
+        //        { "block_damage_ranged_active", 50}
+        //    };
+
         #region GetHerosData Button
         /// <summary>
         /// Dota2 Itembuilds path browser
@@ -329,46 +416,6 @@ namespace Tup.Dota2Recipe.Spider
             if (browser.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
                 this.TextBoxDota2Folder.Text = browser.SelectedPath;
         }
-
-        /// <summary>
-        /// Dota2 安装目录 下 itembuilds 文件夹
-        /// </summary>
-        private string m_Dota2ItembuildsPath = null;
-        /// <summary>
-        /// Dota2 安装目录 下 resource 文件夹
-        /// </summary>
-        private string m_Dota2ResourcePath = null;
-        /// <summary>
-        /// Dota2 安装目录 下 中文本地化语言文本(resource/dota_schinese.txt)
-        /// 
-        /// </summary>
-        private IDictionary<string, string> m_Dota2LangResource_Dota_Res = null;
-        /// <summary>
-        /// Dota2 客户端中文本地化语言文本资源前缀
-        /// </summary>
-        private static readonly string s_Dota2LangResource_Dota_Res_Lang_Prefix = "DOTA_Tooltip_";
-        /// <summary>
-        /// 物品-赤红甲-AbilitySpecial
-        /// </summary>
-        /// <remarks>
-        /// https://github.com/dotabuff/d2vpk/blob/master/json/dota_pak01/scripts/npc/items.json#L2911
-        /// </remarks>
-        private static readonly IDictionary<string, object> s_Item_Crimson_Guard_AbilitySpecial
-            = new Dictionary<string, object>()
-            {
-                { "bonus_health", 250},
-                { "bonus_health_regen", 6},
-                { "bonus_all_stats", 2},
-                { "bonus_armor", 5},
-                { "block_chance", 80},
-                { "block_damage_melee", 40},
-                { "block_damage_ranged", 20},
-                { "bonus_aoe_armor", 2},
-                { "duration", 9},
-                { "bonus_aoe_radius", 750},
-                { "block_damage_melee_active", 50},
-                { "block_damage_ranged_active", 50}
-            };
         /// <summary>
         /// 英雄数据获取
         /// </summary>
@@ -378,7 +425,7 @@ namespace Tup.Dota2Recipe.Spider
         {
             this.ClearMsg();
 
-            InitDota2FolderRes();
+            //await InitDota2ClientRes();
 
             var heroDic = new Dictionary<string, HeroItem>();
             var http = new HttpClient();
@@ -413,7 +460,7 @@ namespace Tup.Dota2Recipe.Spider
                         atk = cVLHeroItem["atk"].Value<string>(),
                         atk_l = cVLHeroItem["atk_l"].Value<string>(),
 
-                        bio = cVEHeroItem["bio"].Value<string>(),
+                        //bio = cVEHeroItem["bio"].Value<string>(), //INFO:不要英语资源文件了
                         //bio = cVLHeroItem["bio"].Value<string>(),
                         bio_l = cVLHeroItem["bio"].Value<string>(),
 
@@ -506,28 +553,6 @@ namespace Tup.Dota2Recipe.Spider
             Msg("hero-get-save---------------------Count:{0}-", heroDic.Count);
             #endregion
             //LogHelper.LogDebug("ButtonGetHeroData_Click-{0}-\r\n{1}", heroDic, JsonUtil.Serialize(heroDic));
-        }
-        /// <summary>
-        /// 初始化 Dota2 文件夹下 资源数据
-        /// </summary>
-        private void InitDota2FolderRes()
-        {
-            if (this.CheckBoxHeroDetail.Checked
-                && (string.IsNullOrEmpty(this.TextBoxDota2Folder.Text)
-                    || !Directory.Exists(this.TextBoxDota2Folder.Text)))
-            {
-                Msg("----------dota2 Folder null.");
-                return;
-            }
-
-            //客户端资源文件
-            var dota2FolderPath = this.TextBoxDota2Folder.Text;
-            m_Dota2ItembuildsPath = Path.Combine(dota2FolderPath, "itembuilds");
-            m_Dota2ResourcePath = Path.Combine(dota2FolderPath, "resource");
-            ThrowHelper.ThrowIfFalse(Directory.Exists(m_Dota2ItembuildsPath), "dota2ItembuildsPath");
-            ThrowHelper.ThrowIfFalse(Directory.Exists(m_Dota2ResourcePath), "dota2ResourcePath");
-
-            m_Dota2LangResource_Dota_Res = GetDota2LangResourceDotaRes("schinese", m_Dota2ResourcePath);
         }
         /// <summary>
         /// 从 replays.net 获取英雄数据信息(别名/技能加点)
@@ -1023,59 +1048,6 @@ namespace Tup.Dota2Recipe.Spider
             return null;
         }
         /// <summary>
-        /// 获取 Dota2 客户端中文本地化语言文本(resource/dota_schinese.txt)
-        /// </summary>
-        /// <param name="lang"></param>
-        /// <remarks>
-        /// 从 Dota2 客户端资源加载
-        /// </remarks>
-        private IDictionary<string, string> GetDota2LangResourceDotaRes(string lang, string dota2ResourcePath)
-        {
-            ThrowHelper.ThrowIfNull(lang, "heroKeynlangame");
-            ThrowHelper.ThrowIfNull(dota2ResourcePath, "dota2ResourcePath");
-
-            var path = Path.Combine(dota2ResourcePath, string.Format("dota_{0}.txt", lang));
-            if (!File.Exists(path))
-            {
-                Msg("******---GetDota2LangResourceDotaRes-{0}-!Exists", path);
-                return null;
-            }
-
-            var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            try
-            {
-                var qmapScript = File.ReadAllText(path);
-                if (qmapScript == null)
-                    return null;
-
-                var qmap = SimpleQMapParser.Parse(qmapScript);
-                QMapObjectValue itemsElm = null;
-                if (qmap == null
-                    || (itemsElm = qmap.Value.ToObjectValue().Find("Tokens").ToObjectValue()) == null //lang>Tokens
-                        || itemsElm.Value == null)
-                {
-                    Msg("******---GetDota2LangResourceDotaRes-{0}-qmap-NULL", path);
-                    return null;
-                }
-
-                var englishPrefix = "[english]";
-                foreach (var item in itemsElm.Value.Values)
-                {
-                    var key = item.Key;
-                    if (key.StartsWith(englishPrefix))
-                        continue;
-
-                    result[key] = item.Value.Value[0];
-                }
-                return result;
-            }
-            catch (Exception ex)
-            {
-                Msg("***********-GetDota2LangResourceDotaRes-EX:-{0}--{1}", path, ex);
-            }
-            return result;
-        }
-        /// <summary>
         /// 检查英雄推荐道具Key名称
         /// </summary>
         /// <param name="sysItemsList"></param>
@@ -1159,6 +1131,404 @@ namespace Tup.Dota2Recipe.Spider
             else
                 return itemName;
         }
+
+        #region Dota2客户端下 资源加载处理
+        /// <summary>
+        /// 初始化 Dota2 文件夹下 资源数据
+        /// </summary>
+        private async Task InitDota2ClientRes()
+        {
+            if (this.CheckBoxHeroDetail.Checked
+                && (string.IsNullOrEmpty(this.TextBoxDota2Folder.Text)
+                    || !Directory.Exists(this.TextBoxDota2Folder.Text)))
+            {
+                Msg("----------dota2 Folder null.");
+                return;
+            }
+
+            //客户端资源文件
+            var dota2FolderPath = this.TextBoxDota2Folder.Text;
+            m_Dota2ItembuildsPath = Path.Combine(dota2FolderPath, "itembuilds");
+            m_Dota2ResourcePath = Path.Combine(dota2FolderPath, "resource");
+            ThrowHelper.ThrowIfFalse(Directory.Exists(m_Dota2ItembuildsPath), "dota2ItembuildsPath");
+            ThrowHelper.ThrowIfFalse(Directory.Exists(m_Dota2ResourcePath), "dota2ResourcePath");
+
+            #region 获取语言资源
+            m_Dota2LangResource_Dota_Res = GetDota2LangResourceDotaRes("schinese", m_Dota2ResourcePath);
+            m_Dota2LangResource_Dota_English_Res = GetDota2LangResourceDotaRes("english", m_Dota2ResourcePath);
+
+            //用英语资源填充丢失资源
+            ThrowHelper.ThrowIfNull(m_Dota2LangResource_Dota_Res, "m_Dota2LangResource_Dota_Res");
+            ThrowHelper.ThrowIfNull(m_Dota2LangResource_Dota_English_Res, "m_Dota2LangResource_Dota_English_Res");
+            foreach (var eResItem in m_Dota2LangResource_Dota_English_Res)
+            {
+                if (!m_Dota2LangResource_Dota_Res.ContainsKey(eResItem.Key))
+                    m_Dota2LangResource_Dota_Res[eResItem.Key] = eResItem.Value;
+            }
+            #endregion
+
+            #region 获取 英雄/技能/物品 原始数据
+            /**
+             * %Steam_Dota2%\SteamApps\common\dota 2 beta\dota\pak01_dir.vpk
+             * 
+             * 英雄:/dota_pak01/scripts/npc/npc_heroes.json
+             *      https://github.com/dotabuff/d2vpk/raw/master/json/dota_pak01/scripts/npc/npc_heroes.json
+             * 技能:/dota_pak01/scripts/npc/npc_abilities.json
+             *      https://github.com/dotabuff/d2vpk/raw/master/json/dota_pak01/scripts/npc/npc_abilities.json
+             * 物品:/dota_pak01/scripts/npc/items.json
+             *      https://github.com/dotabuff/d2vpk/raw/master/json/dota_pak01/scripts/npc/items.json
+             */
+            //INFO:从 github.com/dotabuff/dota_pak01 项目 JSON 读取原始数据
+            //await GetDota2D2vpkResourceDotaRes();
+            #endregion
+        }
+        /// <summary>
+        /// 获取 Dota2 客户端本地化语言文本
+        /// </summary>
+        /// <param name="lang"></param>
+        /// <remarks>
+        /// 从 Dota2 客户端资源加载
+        /// </remarks>
+        private IDictionary<string, string> GetDota2LangResourceDotaRes(string lang, string dota2ResourcePath)
+        {
+            ThrowHelper.ThrowIfNull(lang, "heroKeynlangame");
+            ThrowHelper.ThrowIfNull(dota2ResourcePath, "dota2ResourcePath");
+
+            var path = Path.Combine(dota2ResourcePath, string.Format("dota_{0}.txt", lang));
+            if (!File.Exists(path))
+            {
+                Msg("******---GetDota2LangResourceDotaRes-{0}-!Exists", path);
+                return null;
+            }
+
+            var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            try
+            {
+                var qmapScript = File.ReadAllText(path);
+                if (qmapScript == null)
+                    return null;
+
+                var qmap = SimpleQMapParser.Parse(qmapScript);
+                QMapObjectValue itemsElm = null;
+                if (qmap == null
+                    || (itemsElm = qmap.Value.ToObjectValue().Find("Tokens").ToObjectValue()) == null //lang>Tokens
+                        || itemsElm.Value == null)
+                {
+                    Msg("******---GetDota2LangResourceDotaRes-{0}-qmap-NULL", path);
+                    return null;
+                }
+
+                var englishPrefix = "[english]";
+                foreach (var item in itemsElm.Value.Values)
+                {
+                    var key = item.Key;
+                    if (key.StartsWith(englishPrefix))
+                        continue;
+
+                    result[key] = item.Value.Value[0];
+                }
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Msg("***********-GetDota2LangResourceDotaRes-EX:-{0}--{1}", path, ex);
+            }
+            return result;
+        }
+        /// <summary>
+        /// 获取 Dota2 客户端本地化 物品/英雄/技能 文本
+        /// </summary>
+        private async Task GetDota2D2vpkResourceDotaRes()
+        {
+            var http = new HttpClient();
+
+            var logKey = "github.com/dotabuff/dota_pak01/-get-{0}";
+
+            Msg(logKey, "base-begin-----");
+            m_Dota2Res_Items_Res = await GetDota2D2vpkResourceDotaRes_Items(http, logKey);
+            m_Dota2Res_NpcAbilities_Res = await GetDota2D2vpkResourceDotaRes_NpcAbilities(http, logKey);
+            m_Dota2Res_NpcHeroes_Res = await GetDota2D2vpkResourceDotaRes_NpcHeroes(http, logKey);
+            Msg(logKey, "base-end-----");
+        }
+        /// <summary>
+        /// 获取 Dota2 客户端本地化 技能 文本
+        /// </summary>
+        /// <param name="http"></param>
+        /// <param name="logKey"></param>
+        private async Task<IDictionary<string, Dota2ResNpcAbilitiesItem>> GetDota2D2vpkResourceDotaRes_NpcAbilities(HttpClient http, string logKey)
+        {
+            Msg(logKey, "base-npcAbilities-begin-----");
+
+            //json 数据
+            var jsonUrl = string.Format(s_GitHub_DotaBuff_D2vpk_Abilities_Json_Uri, GetRandom());
+            var jsonData = JObject.Parse(await http.GetStringAsync(jsonUrl));
+            Msg(logKey, "base-npcAbilities-Url:" + jsonUrl);
+            if (jsonData == null || jsonData.Count <= 0)
+            {
+                Msg("******-" + logKey, "base-npcAbilities-jsonData-NULL----");
+                return null;
+            }
+
+            var objRes = new Dictionary<string, Dota2ResNpcAbilitiesItem>(StringComparer.OrdinalIgnoreCase);
+            jsonData = jsonData["DOTAAbilities"] as JObject;
+            Dota2ResNpcAbilitiesItem tObjItem = null;
+            foreach (var item in jsonData)
+            {
+                if (item.Key.StartsWith("Version"))
+                    continue;
+
+                //TODO---ability_base
+                tObjItem = item.Value.ToObject<Dota2ResNpcAbilitiesItem>();
+                objRes[item.Key] = tObjItem;
+
+                //Fields fix
+                tObjItem.AbilityBehavior2 = ToArray_Dota2ResFields(tObjItem.AbilityBehavior);
+
+                tObjItem.AbilityUnitTargetType2 = ToArray_Dota2ResFields(tObjItem.AbilityUnitTargetType);
+                tObjItem.AbilityUnitTargetFlags2 = ToArray_Dota2ResFields(tObjItem.AbilityUnitTargetFlags);
+
+                tObjItem.AbilitySpecial2 = ToDictionary_Dota2ResFields(tObjItem.AbilitySpecial);
+            }
+            Msg(logKey, "base-npcAbilities-end");
+            return objRes;
+        }
+        /// <summary>
+        /// 获取 Dota2 客户端本地化 英雄 文本
+        /// </summary>
+        /// <param name="http"></param>
+        /// <param name="logKey"></param>
+        private async Task<IDictionary<string, Dota2ResNpcHeroesItem>> GetDota2D2vpkResourceDotaRes_NpcHeroes(HttpClient http, string logKey)
+        {
+            Msg(logKey, "base-npcHeroes-begin-----");
+
+            //json 数据
+            var jsonUrl = string.Format(s_GitHub_DotaBuff_D2vpk_Heroes_Json_Uri, GetRandom());
+            var jsonData = JObject.Parse(await http.GetStringAsync(jsonUrl));
+            Msg(logKey, "base-npcHeroes-Url:" + jsonUrl);
+            if (jsonData == null || jsonData.Count <= 0)
+            {
+                Msg("******-" + logKey, "base-npcHeroes-jsonData-NULL----");
+                return null;
+            }
+
+            var objRes = new Dictionary<string, Dota2ResNpcHeroesItem>(StringComparer.OrdinalIgnoreCase);
+            jsonData = jsonData["DOTAHeroes"] as JObject;
+            Dota2ResNpcHeroesItem tObjItem = null;
+            foreach (var item in jsonData)
+            {
+                if (!item.Key.StartsWith("npc_dota_"))
+                    continue;
+
+                //TODO---npc_dota_hero_base
+                tObjItem = item.Value.ToObject<Dota2ResNpcHeroesItem>();
+                objRes[item.Key] = tObjItem;
+
+                //Fields fix
+                tObjItem.Abilitys2 = ToArray_Dota2ResFields(tObjItem);
+
+                tObjItem.NameAliases2 = ToArray_Dota2ResFields(tObjItem.NameAliases, ";");
+                tObjItem.Role2 = ToArray_Dota2ResFields(tObjItem.Role, ";");
+            }
+            Msg(logKey, "base-npcHeroes-end");
+            return objRes;
+        }
+        /// <summary>
+        /// 获取 Dota2 客户端本地化 物品 文本
+        /// </summary>
+        /// <param name="http"></param>
+        /// <param name="logKey"></param>
+        private async Task<IDictionary<string, Dota2ResItemsItem>> GetDota2D2vpkResourceDotaRes_Items(HttpClient http, string logKey)
+        {
+            Msg(logKey, "base-items-begin-----");
+
+            //json 数据
+            var jsonUrl = string.Format(s_GitHub_DotaBuff_D2vpk_Items_Json_Uri, GetRandom());
+            var jsonData = JObject.Parse(await http.GetStringAsync(jsonUrl));
+            Msg(logKey, "base-items-Url:" + jsonUrl);
+            if (jsonData == null || jsonData.Count <= 0)
+            {
+                Msg("******-" + logKey, "base-items-jsonData-NULL----");
+                return null;
+            }
+
+            var objRes = new Dictionary<string, Dota2ResItemsItem>(StringComparer.OrdinalIgnoreCase);
+            jsonData = jsonData["DOTAAbilities"] as JObject;
+            Dota2ResItemsItem tObjItem = null;
+            foreach (var item in jsonData)
+            {
+                if (!item.Key.StartsWith("item_"))
+                    continue;
+
+                tObjItem = item.Value.ToObject<Dota2ResItemsItem>();
+                objRes[item.Key] = tObjItem;
+
+                //Fields fix
+                tObjItem.key_name = item.Key;
+                tObjItem.AbilityBehavior2 = ToArray_Dota2ResFields(tObjItem.AbilityBehavior);
+                tObjItem.ItemDeclarations2 = ToArray_Dota2ResFields(tObjItem.ItemDeclarations);
+                tObjItem.ItemRequirements2 = ToArray_Dota2ResFields(tObjItem.ItemRequirements);
+                tObjItem.ItemShopTags2 = ToArray_Dota2ResFields(tObjItem.ItemShopTags, ";");
+                tObjItem.ItemAliases2 = ToArray_Dota2ResFields(tObjItem.ItemAliases, ";");
+
+                tObjItem.ItemCost2 = ToInt32_Dota2ResFields(tObjItem.ItemCost);
+                tObjItem.AbilitySpecial2 = ToDictionary_Dota2ResFields(tObjItem.AbilitySpecial);
+            }
+            Msg(logKey, "base-items-end");
+            return objRes;
+        }
+
+        /// <summary>
+        /// Dota2ResFields ToDictionary Field_AbilitySpecial
+        /// </summary>
+        /// <param name="fields"></param>
+        /// <returns></returns>
+        private static Dictionary<string, string> ToDictionary_Dota2ResFields(JObject[] fields)
+        {
+            var resDic = new Dictionary<string, string>();
+            if (fields.IsEmpty())
+                return resDic;
+
+            JProperty tJProperty = null;
+            JToken tJValue = null;
+            string tValue = null;
+            foreach (var item in fields)
+            {
+                tJProperty = item.First as JProperty;
+                tJValue = tJProperty.Value;
+                switch (tJValue.Type)
+                {
+                    case JTokenType.Array:
+                        tValue = ToString_Dota2ResFields(tJValue as JArray);
+                        break;
+                    case JTokenType.Object:
+                        ThrowHelper.ThrowIfFalse(false, "tJValue.Type is JTokenType.Object");
+                        break;
+                    default:
+                        tValue = tJValue.Value<string>();
+                        break;
+                }
+                resDic[tJProperty.Name] = tValue;
+            }
+            return resDic;
+        }
+        /// <summary>
+        /// Dota2ResFields ToString Field_JTokenType.Array
+        /// </summary>
+        /// <param name="fields"></param>
+        /// <returns></returns>
+        private static string ToString_Dota2ResFields(JArray fields)
+        {
+            if (fields.IsEmpty())
+                return string.Empty;
+
+            return string.Join<string>(" ", fields.Select(x => x.Value<string>()));
+        }
+        /// <summary>
+        /// Dota2ResFields ToArray Field_JTokenType.String
+        /// </summary>
+        /// <param name="fields"></param>
+        /// <returns></returns>
+        private static string[] ToArray_Dota2ResFields(string fields, string splitChar = "|")
+        {
+            if (fields.IsEmpty())
+                return new string[0];
+
+            return fields.ToArrayEx(splitChar);
+        }
+        /// <summary>
+        /// Dota2ResFields ToArray Field_JTokenType.StringArray
+        /// </summary>
+        /// <param name="fields"></param>
+        /// <returns></returns>
+        private static string[] ToArray_Dota2ResFields(string[] fields, string splitChar = ";")
+        {
+            if (fields.IsEmpty())
+                return new string[0];
+
+            return fields.FirstOrDefault().ToArrayEx(";");
+        }
+        /// <summary>
+        /// Dota2ResFields ToArray_Abilitys2 Dota2ResNpcHeroesItem
+        /// </summary>
+        /// <param name="fields"></param>
+        /// <returns></returns>
+        private static string[] ToArray_Dota2ResFields(Dota2ResNpcHeroesItem item)
+        {
+            if (item == null)
+                return new string[0];
+
+            var outList = new List<string>(7);
+
+            if (item.Ability1.HasValue()) outList.Add(item.Ability1);
+            if (item.Ability2.HasValue()) outList.Add(item.Ability2);
+            if (item.Ability3.HasValue()) outList.Add(item.Ability3);
+            if (item.Ability4.HasValue()) outList.Add(item.Ability4);
+            if (item.Ability5.HasValue()) outList.Add(item.Ability5);
+            if (item.Ability6.HasValue()) outList.Add(item.Ability6);
+            if (item.Ability7.HasValue()) outList.Add(item.Ability7);
+            if (item.Ability8.HasValue()) outList.Add(item.Ability8);
+            if (item.Ability9.HasValue()) outList.Add(item.Ability9);
+            if (item.Ability10.HasValue()) outList.Add(item.Ability10);
+            if (item.Ability11.HasValue()) outList.Add(item.Ability11);
+            if (item.Ability12.HasValue()) outList.Add(item.Ability12);
+            if (item.Ability13.HasValue()) outList.Add(item.Ability13);
+            if (item.Ability14.HasValue()) outList.Add(item.Ability14);
+            if (item.Ability15.HasValue()) outList.Add(item.Ability15);
+            if (item.Ability16.HasValue()) outList.Add(item.Ability16);
+
+            return outList.ToArray();
+        }
+        /// <summary>
+        /// Dota2ResFields ToInt32 Field_JTokenType.String
+        /// </summary>
+        /// <param name="fields"></param>
+        /// <returns></returns>
+        private static int ToInt32_Dota2ResFields(string fields)
+        {
+            if (fields.IsEmpty())
+                return 0;
+
+            return fields.ParseToInt32(0);
+        }
+        ///// <summary>
+        ///// 获取 Dota2 客户端本地化 物品/英雄/技能 文本
+        ///// </summary>
+        //private async void TGetDota2D2vpkResourceDotaRes()
+        //{
+        //    var http = new HttpClient();
+
+        //    var logKey = "github.com/dotabuff/dota_pak01/-get-{0}";
+
+        //    Msg(logKey, "base");
+        //    Msg(logKey, "base-items------");
+
+        //    //items json 数据
+        //    var jsonItemsUrl = string.Format(s_GitHub_DotaBuff_D2vpk_Abilities_Json_Uri, GetRandom());
+        //    var jsonItemsData = JObject.Parse(await http.GetStringAsync(jsonItemsUrl));
+        //    Msg(logKey, "base-items-Url:" + jsonItemsUrl);
+
+        //    jsonItemsData = jsonItemsData["DOTAAbilities"] as JObject;
+        //    var tItemsFields = new Dictionary<string, JTokenType>();
+        //    JObject jsonItemDetail = null;
+        //    foreach (var item in jsonItemsData)
+        //    {
+        //        if (item.Key.StartsWith("Version"))
+        //            continue;
+
+        //        jsonItemDetail = item.Value as JObject;
+        //        foreach (var fieldItem in jsonItemDetail)
+        //        {
+        //            tItemsFields[fieldItem.Key] = fieldItem.Value.Type;
+        //        }
+        //    }
+
+        //    Console.WriteLine("-----------------{0}", jsonItemsUrl);
+        //    foreach (var item in tItemsFields)
+        //    {
+        //        Debug.WriteLine(item);
+        //    }
+        //    Console.WriteLine("-----------------");
+        //}
         /// <summary>
         /// 适配 资源文本(从客户端中文本地化语言文本资源)
         /// </summary>
@@ -1206,6 +1576,7 @@ namespace Tup.Dota2Recipe.Spider
             return outResValue;
         }
         #endregion
+        #endregion
 
         #region GetItemsData Button
         /// <summary>
@@ -1217,7 +1588,7 @@ namespace Tup.Dota2Recipe.Spider
         {
             this.ClearMsg();
 
-            InitDota2FolderRes();
+            await InitDota2ClientRes();
 
             var itemsDic = new Dictionary<string, ItemsItem>();
             var http = new HttpClient();
@@ -1277,21 +1648,21 @@ namespace Tup.Dota2Recipe.Spider
 
                 //INFO:适配官方物品英文资源
                 //INFO:赤红甲
-                if (cKeyName == "crimson_guard")
-                {
-                    //dname_l/desc/notes/lore
-                    //DOTA_Tooltip_Ability_item_crimson_guard
-                    //DOTA_Tooltip_ability_item_crimson_guard_Description
-                    //DOTA_Tooltip_ability_item_crimson_guard_Note0
-                    //DOTA_Tooltip_ability_item_crimson_guard_Note1
-                    //DOTA_Tooltip_ability_item_crimson_guard_Lore
-                    tVItem.dname_l = GetResFromDota2LangResource("DOTA_Tooltip_Ability_item_crimson_guard");
-                    tVItem.desc = GetResFromDota2LangResource("DOTA_Tooltip_ability_item_crimson_guard_Description", s_Item_Crimson_Guard_AbilitySpecial);
-                    tVItem.lore = GetResFromDota2LangResource("DOTA_Tooltip_ability_item_crimson_guard_Lore");
-                    tVItem.notes = string.Format("{0}<br />{1}",
-                                                GetResFromDota2LangResource("DOTA_Tooltip_ability_item_crimson_guard_Note0"),
-                                                GetResFromDota2LangResource("DOTA_Tooltip_ability_item_crimson_guard_Note1"));
-                }
+                //if (cKeyName == "crimson_guard")
+                //{
+                //    //dname_l/desc/notes/lore
+                //    //DOTA_Tooltip_Ability_item_crimson_guard
+                //    //DOTA_Tooltip_ability_item_crimson_guard_Description
+                //    //DOTA_Tooltip_ability_item_crimson_guard_Note0
+                //    //DOTA_Tooltip_ability_item_crimson_guard_Note1
+                //    //DOTA_Tooltip_ability_item_crimson_guard_Lore
+                //    tVItem.dname_l = GetResFromDota2LangResource("DOTA_Tooltip_Ability_item_crimson_guard");
+                //    tVItem.desc = GetResFromDota2LangResource("DOTA_Tooltip_ability_item_crimson_guard_Description", s_Item_Crimson_Guard_AbilitySpecial);
+                //    tVItem.lore = GetResFromDota2LangResource("DOTA_Tooltip_ability_item_crimson_guard_Lore");
+                //    tVItem.notes = string.Format("{0}<br />{1}",
+                //                                GetResFromDota2LangResource("DOTA_Tooltip_ability_item_crimson_guard_Note0"),
+                //                                GetResFromDota2LangResource("DOTA_Tooltip_ability_item_crimson_guard_Note1"));
+                //}
 
                 //INFO:官方'紫怨'价格错误
                 if (cKeyName == "orchid" && cCost == 5025)
@@ -1570,7 +1941,7 @@ namespace Tup.Dota2Recipe.Spider
             if (File.Exists(tsavePath))
                 return true;
 
-            var imgBytes = await http.GetByteArrayAsync(url);
+            var imgBytes = await http.GetByteArrayAsync(string.Format("{0}?v={1}", url, GetRandom()));
             if (imgBytes != null && imgBytes.Length > 0)
             {
                 //File.WriteAllBytes(savePath, imgBytes);
@@ -1631,6 +2002,12 @@ namespace Tup.Dota2Recipe.Spider
             }
         }
         #endregion
+
+        private async void button1_Click(object sender, EventArgs e)
+        {
+            //TGetDota2D2vpkResourceDotaRes();
+            //await GetDota2D2vpkResourceDotaRes();
+        }
     }
     /// <summary>
     /// 
@@ -1752,6 +2129,9 @@ namespace Tup.Dota2Recipe.Spider
                 s.lv_dmg = s.lv_int;
             else
                 throw new NotSupportedException();
+
+            //初始移动速度
+            s.init_ms = double.Parse(stats[4][2]);
 
             //"detailstats1":[["生命值","2,198","1,305","587"],
             //               ["魔法值","1,157","637","273"],

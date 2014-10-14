@@ -434,7 +434,11 @@ namespace Tup.Dota2Recipe.Spider
                     else if (c == 't')
                         s.Append('\t');
                     else
-                        throw new SerializationException("Invalid STRING-Escape");
+                    {
+                        s.Append('\\').Append(s);
+                        Debug.WriteLine("Invalid STRING-Escape-[\\{0}]", s);
+                    }
+                    //    throw new SerializationException("Invalid STRING-Escape");
                 }
                 else
                     s.Append(c);
