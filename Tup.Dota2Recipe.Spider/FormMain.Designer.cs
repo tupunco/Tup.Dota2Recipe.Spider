@@ -161,7 +161,7 @@
             this.TextBoxDota2Folder.Name = "TextBoxDota2Folder";
             this.TextBoxDota2Folder.Size = new System.Drawing.Size(285, 21);
             this.TextBoxDota2Folder.TabIndex = 6;
-            this.TextBoxDota2Folder.Text = "F:\\Steam_Dota2\\SteamApps\\common\\dota 2 beta\\dota";
+            this.TextBoxDota2Folder.Text = "H:\\Stream\\Steam\\steamapps\\common\\dota 2 beta\\dota";
             // 
             // button1
             // 

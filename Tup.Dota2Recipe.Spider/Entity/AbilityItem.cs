@@ -26,6 +26,18 @@ namespace Tup.Dota2Recipe.Spider.Entity
         /// </summary>
         [JsonIgnore]
         public List<int> skillIDs { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return string.Format("[ReplaysAbilitySkillItem groupName:{0},desc:{1},abilityKeys:[{2}],skillIDs:[{3}]]",
+                groupName, desc,
+                abilityKeys != null ? string.Join(",", abilityKeys) : "",
+                skillIDs != null ? string.Join(",", skillIDs) : "");
+        }
     }
     /// <summary>
     /// 技能实体

@@ -44,7 +44,6 @@ using Newtonsoft.Json.Linq;
 
 using Tup.Dota2Recipe.Spider.Common;
 using Tup.Dota2Recipe.Spider.Entity;
-using System.Diagnostics;
 
 namespace Tup.Dota2Recipe.Spider
 {
@@ -71,13 +70,22 @@ namespace Tup.Dota2Recipe.Spider
         /// %Steam_Dota2%\SteamApps\common\dota 2 beta\dota\pak01_dir.vpk
         /// 
         /// 英雄:/dota_pak01/scripts/npc/npc_heroes.json
-        ///      https://github.com/dotabuff/d2vpk/raw/master/json/dota_pak01/scripts/npc/npc_heroes.json
+        ///      https://raw.githubusercontent.com/dotabuff/d2vpk/master/json/dota_pak01/scripts/npc/npc_heroes.json
         /// 技能:/dota_pak01/scripts/npc/npc_abilities.json
         ///      https://github.com/dotabuff/d2vpk/raw/master/json/dota_pak01/scripts/npc/npc_abilities.json
         /// 物品:/dota_pak01/scripts/npc/items.json
         ///      https://github.com/dotabuff/d2vpk/raw/master/json/dota_pak01/scripts/npc/items.json
         /// </remarks>
-        private static readonly string s_GitHub_DotaBuff_D2vpk_Uri = "https://github.com/dotabuff/d2vpk/raw/master/json/dota_pak01/";
+        private static readonly string s_GitHub_DotaBuff_Uri = "https://raw.githubusercontent.com/dotabuff/d2vpk/master/";
+        /// <summary>
+        /// dotabuff github.com d2vpk project-dota_pak01
+        /// </summary>
+        private static readonly string s_GitHub_DotaBuff_D2vpk_Uri = s_GitHub_DotaBuff_Uri + "json/dota_pak01/";
+        /// <summary>
+        /// dotabuff github.com d2vpk project-dota/resource
+        /// </summary>
+        private static readonly string s_GitHub_DotaBuff_Resource_Uri = s_GitHub_DotaBuff_Uri + "dota/resource/";
+
         /// <summary>
         /// JSON 格式 - Dota2 客户端 英雄 原始数据 Uri
         /// </summary>
@@ -248,12 +256,13 @@ namespace Tup.Dota2Recipe.Spider
                 },
                 {"lycan",
                     new Dictionary<string, string>(){
-                        {"变狼", "变形"}
+                        {"变狼", "变身"},
                     }
                 },
                 {"chaos_knight",
                     new Dictionary<string, string>(){
-                        {"致命一击", "混沌一击"}
+                        {"致命一击", "混沌一击"},
+                        {"幻象", "混沌之军"}	
                     }
                 },
                 {"visage",
@@ -301,7 +310,50 @@ namespace Tup.Dota2Recipe.Spider
                     new Dictionary<string, string>(){
                         {"压制", "强攻"}
                     }
-                }
+                },
+                {"terrorblade",
+                    new Dictionary<string, string>(){
+                        {"变身", "变形"}
+                    }
+                },
+                {"bloodseeker",
+                    new Dictionary<string, string>(){
+                        {"屠戮", "血之祭祀"}
+                    }
+                },
+                {"night_stalker",
+                    new Dictionary<string, string>(){
+                        {"夜晚中的狩猎者", "暗夜猎影"}
+                    }
+                },
+                {"phantom_lancer",
+                    new Dictionary<string, string>(){
+                        {"神出鬼没", "神行百变"},
+                        {"幻化之锋", "并列"},
+                        {"并列", "幻影冲锋"},
+                    }
+                },
+                {"sven",
+                    new Dictionary<string, string>(){
+                        {"风暴之锤", "风暴之拳"},
+                    }
+                },
+                {"beastmaster",
+                    new Dictionary<string, string>(){
+                        {"野性呼唤", "野性呼唤：战鹰"},
+                    }
+                },
+                {"leshrac",
+                    new Dictionary<string, string>(){
+                        {"恶魔赦令", "恶魔敕令"},
+                    }
+                },
+                {"naga_siren",
+                    new Dictionary<string, string>(){
+                        {"取消海妖之歌", "终止海妖之歌"},
+                    }
+                },
+ 
                 #endregion
             };
 
@@ -361,7 +413,7 @@ namespace Tup.Dota2Recipe.Spider
         /// </summary>
         private IDictionary<string, string> m_Dota2LangResource_Dota_Res = null;
         /// <summary>
-        /// Dota2 安装目录 下 英语本地化语言文本(resource//dota_english.txt)
+        /// Dota2 安装目录 下 英语本地化语言文本(resource/dota_english.txt)
         /// </summary>
         private IDictionary<string, string> m_Dota2LangResource_Dota_English_Res = null;
         /// <summary>
@@ -578,7 +630,7 @@ namespace Tup.Dota2Recipe.Spider
                     //earth_spirit   earth
                     //ember_spirit	ember
                     HeroItem tHero = null;
-                    tmKeyname = m.Groups["keyname"].Value;
+                    tmKeyname = m.Groups["keyname"].Value.ToLower();
                     if (tmKeyname == "earth") //大地之灵
                         tmKeyname = "earth_spirit";
                     else if (tmKeyname == "ember") //灰烬之灵
@@ -587,6 +639,8 @@ namespace Tup.Dota2Recipe.Spider
                         tmKeyname = "legion_commander";
                     else if (tmKeyname == "tb") //恐怖利刃
                         tmKeyname = "terrorblade";
+                    else if (tmKeyname == "winter") //寒冬飞龙
+                        tmKeyname = "winter_wyvern";
 
                     if (!heroDic.TryGetValue(tmKeyname, out tHero))
                         Msg("********NULL:hero-get-Replays_GetHeroData_List-HTML-2-{0}", tmKeyname);
@@ -615,50 +669,50 @@ namespace Tup.Dota2Recipe.Spider
                 {
                     try
                     {
-                        if (replaysId == "6") //魅惑魔女 适配(replays.net AJAX 加载异常)
-                        {
-                            #region 魅惑魔女 适配
-                            cVHeroItem.nickname_l = new string[] { "AS", "Enchantress", "Aiushtha", "小鹿" };
-                            //cVHeroItem.replays_id = "6";
-                            //cVHeroItem.replays_pageName = "AS";
-                            cVHeroItem.replays_skill = new Dictionary<int, ReplaysHeroSkillItem>()
-                            {
-                                {11, 
-                                    new ReplaysHeroSkillItem()
-                                    {
-                                        Name = "不可侵犯",
-                                        SkillID = 11,
-                                        SouXie = "U"
-                                    }
-                                },
-                                {12, 
-                                    new ReplaysHeroSkillItem()
-                                    {
-                                        Name = "魅惑",
-                                        SkillID = 12,
-                                        SouXie = "C"
-                                    }
-                                },
-                                {13, 
-                                    new ReplaysHeroSkillItem()
-                                    {
-                                        Name = "自然之助",
-                                        SkillID = 13,
-                                        SouXie = "R"
-                                    }
-                                },
-                                {14, 
-                                    new ReplaysHeroSkillItem()
-                                    {
-                                        Name = "推进",
-                                        SkillID = 14,
-                                        SouXie = "T"
-                                    }
-                                }
-                            };
-                            #endregion
-                        }
-                        else
+                        //if (replaysId == "6") //魅惑魔女 适配(replays.net AJAX 加载异常)
+                        //{
+                        //    #region 魅惑魔女 适配
+                        //    cVHeroItem.nickname_l = new string[] { "AS", "Enchantress", "Aiushtha", "小鹿" };
+                        //    //cVHeroItem.replays_id = "6";
+                        //    //cVHeroItem.replays_pageName = "AS";
+                        //    cVHeroItem.replays_skill = new Dictionary<int, ReplaysHeroSkillItem>()
+                        //    {
+                        //        {11, 
+                        //            new ReplaysHeroSkillItem()
+                        //            {
+                        //                Name = "不可侵犯",
+                        //                SkillID = 11,
+                        //                SouXie = "U"
+                        //            }
+                        //        },
+                        //        {12, 
+                        //            new ReplaysHeroSkillItem()
+                        //            {
+                        //                Name = "魅惑",
+                        //                SkillID = 12,
+                        //                SouXie = "C"
+                        //            }
+                        //        },
+                        //        {13, 
+                        //            new ReplaysHeroSkillItem()
+                        //            {
+                        //                Name = "自然之助",
+                        //                SkillID = 13,
+                        //                SouXie = "R"
+                        //            }
+                        //        },
+                        //        {14, 
+                        //            new ReplaysHeroSkillItem()
+                        //            {
+                        //                Name = "推进",
+                        //                SkillID = 14,
+                        //                SouXie = "T"
+                        //            }
+                        //        }
+                        //    };
+                        //    #endregion
+                        //}
+                        //else
                         {
                             var tGetHeroData_Detail_Ajax_Uri = string.Format(s_Replays_GetHeroData_Detail_Uri, replaysId);
                             Msg("hero-get-Replays_GetHeroData_AJAX_Detail-{0}", tGetHeroData_Detail_Ajax_Uri);
@@ -722,6 +776,26 @@ namespace Tup.Dota2Recipe.Spider
                                                     .ToList(),
                                 };
 
+                                if (replaysId == "113") //魅惑魔女 replays.net 小鹿详细页面还是有错误, 原来ID==6, 现在建了新的, 但是技能还是老的.
+                                {
+                                    item.skillIDs = item.skillIDs.Select(x =>
+                                    {
+                                        //480/481/482/483
+                                        //11/12/13/14
+                                        switch (x)
+                                        {
+                                            case 11:
+                                                return 480;
+                                            case 12:
+                                                return 481;
+                                            case 13:
+                                                return 482;
+                                            case 14:
+                                                return 483;
+                                        }
+                                        return x;
+                                    }).ToList();
+                                }
                                 if (item.skillIDs != null && item.skillIDs.Count > 0)
                                     skillup.Add(item);
 
@@ -852,13 +926,20 @@ namespace Tup.Dota2Recipe.Spider
                     {
                         Array.ForEach(cVHeroItem.skillup, suItem =>
                         {
-                            suItem.abilityKeys = suItem.skillIDs.Select(siItem =>
+                            try
                             {
-                                if (siItem <= 0)
-                                    return "attribute_bonus"; //黄点
-                                else
-                                    return cVHeroItem.replays_skill[siItem].key_name;
-                            }).ToArray();
+                                suItem.abilityKeys = suItem.skillIDs.Select(siItem =>
+                                {
+                                    if (siItem <= 0)
+                                        return "attribute_bonus"; //黄点
+                                    else
+                                        return cVHeroItem.replays_skill[siItem].key_name;
+                                }).ToArray();
+                            }
+                            catch (Exception ex)
+                            {
+                                Msg("********NULL:hero-get-DetailAndAbility-cVHeroItem.skillup:{0}-ex:{1}", suItem, ex);
+                            }
                         });
                     }
                 }
@@ -917,6 +998,7 @@ namespace Tup.Dota2Recipe.Spider
                 catch (Exception ex)
                 {
                     Msg("********EX:hero-get-DetailAndAbility-Hero:{0},EX:{1}", heroItem.Key, ex);
+                    ex = null;
                 }
                 #endregion
 
@@ -989,6 +1071,7 @@ namespace Tup.Dota2Recipe.Spider
             ThrowHelper.ThrowIfNull(heroKeyname, "heroKeyname");
             ThrowHelper.ThrowIfNull(dota2ItembuildsPath, "dota2ItembuildsPath");
 
+            //TODO----GetHeroDetailItembuilds
             var path = Path.Combine(dota2ItembuildsPath, string.Format("default_{0}.txt", heroKeyname));
             if (!File.Exists(path))
             {
@@ -1136,8 +1219,11 @@ namespace Tup.Dota2Recipe.Spider
         /// <summary>
         /// 初始化 Dota2 文件夹下 资源数据
         /// </summary>
-        private async Task InitDota2ClientRes()
+        /// <param name="http">HttpClient</param>
+        private async Task InitDota2ClientRes(HttpClient http)
         {
+            ThrowHelper.ThrowIfNull(http, "http");
+
             if (this.CheckBoxHeroDetail.Checked
                 && (string.IsNullOrEmpty(this.TextBoxDota2Folder.Text)
                     || !Directory.Exists(this.TextBoxDota2Folder.Text)))
@@ -1154,8 +1240,10 @@ namespace Tup.Dota2Recipe.Spider
             ThrowHelper.ThrowIfFalse(Directory.Exists(m_Dota2ResourcePath), "dota2ResourcePath");
 
             #region 获取语言资源
-            m_Dota2LangResource_Dota_Res = GetDota2LangResourceDotaRes("schinese", m_Dota2ResourcePath);
-            m_Dota2LangResource_Dota_English_Res = GetDota2LangResourceDotaRes("english", m_Dota2ResourcePath);
+            //m_Dota2LangResource_Dota_Res = await GetDota2LangResourceDotaRes(http, "schinese");
+            //m_Dota2LangResource_Dota_English_Res = await GetDota2LangResourceDotaRes(http, "english");
+            m_Dota2LangResource_Dota_Res = await GetDota2LangResourceDotaRes("schinese", m_Dota2ResourcePath);
+            m_Dota2LangResource_Dota_English_Res = await GetDota2LangResourceDotaRes("english", m_Dota2ResourcePath);
 
             //用英语资源填充丢失资源
             ThrowHelper.ThrowIfNull(m_Dota2LangResource_Dota_Res, "m_Dota2LangResource_Dota_Res");
@@ -1185,15 +1273,18 @@ namespace Tup.Dota2Recipe.Spider
         /// <summary>
         /// 获取 Dota2 客户端本地化语言文本
         /// </summary>
+        /// <param name="http">HttpClient</param>
         /// <param name="lang"></param>
         /// <remarks>
-        /// 从 Dota2 客户端资源加载
+        /// 从 https://github.com/dotabuff/d2vpk 资源加载
         /// </remarks>
-        private IDictionary<string, string> GetDota2LangResourceDotaRes(string lang, string dota2ResourcePath)
+        private async Task<IDictionary<string, string>> GetDota2LangResourceDotaRes(/*HttpClient http, */string lang, string dota2ResourcePath)
         {
-            ThrowHelper.ThrowIfNull(lang, "heroKeynlangame");
+            //ThrowHelper.ThrowIfNull(http, "http");
             ThrowHelper.ThrowIfNull(dota2ResourcePath, "dota2ResourcePath");
+            ThrowHelper.ThrowIfNull(lang, "lang");
 
+            //var path = string.Format("{0}dota_{1}.txt", s_GitHub_DotaBuff_Resource_Uri, lang);
             var path = Path.Combine(dota2ResourcePath, string.Format("dota_{0}.txt", lang));
             if (!File.Exists(path))
             {
@@ -1204,9 +1295,13 @@ namespace Tup.Dota2Recipe.Spider
             var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             try
             {
+                //var qmapScript = await http.GetStringAsync(path);
                 var qmapScript = File.ReadAllText(path);
-                if (qmapScript == null)
+                if (qmapScript.IsEmpty())
+                {
+                    Msg("******---GetDota2LangResourceDotaRes-{0}-http.GetStringAsync-NULL", path);
                     return null;
+                }
 
                 var qmap = SimpleQMapParser.Parse(qmapScript);
                 QMapObjectValue itemsElm = null;
@@ -1242,6 +1337,7 @@ namespace Tup.Dota2Recipe.Spider
         {
             var http = new HttpClient();
 
+            //TODO-----GetDota2D2vpkResourceDotaRes
             var logKey = "github.com/dotabuff/dota_pak01/-get-{0}";
 
             Msg(logKey, "base-begin-----");
@@ -1588,10 +1684,10 @@ namespace Tup.Dota2Recipe.Spider
         {
             this.ClearMsg();
 
-            await InitDota2ClientRes();
+            var http = new HttpClient();
+            await InitDota2ClientRes(http);
 
             var itemsDic = new Dictionary<string, ItemsItem>();
-            var http = new HttpClient();
             var itemsFilesDir = "items_images";
             if (!Directory.Exists(itemsFilesDir))
                 Directory.CreateDirectory(itemsFilesDir);
@@ -1614,7 +1710,9 @@ namespace Tup.Dota2Recipe.Spider
             ejsonData = (JObject)ejsonData["itemdata"];
             if (jsonData.Count <= 0 || ejsonData.Count <= 0
                 || jsonData.Count != ejsonData.Count)
+            {
                 return;
+            }
 
             JToken componentsJToken = null;
             foreach (var cItem in jsonData)
@@ -1685,6 +1783,16 @@ namespace Tup.Dota2Recipe.Spider
                     else if (cKeyName == "dagon_5")
                         tVItem.cost = 7720;
                 }
+
+                //INFO:官方'远行鞋'价格名称与'高级远行鞋'搞乱了
+                if (cKeyName.StartsWith("travel_boots"))
+                {
+                    if (cKeyName == "travel_boots_2" && cCost == 2450)
+                        tVItem.cost = 4450;
+                    else if (cKeyName == "travel_boots" && cCost == 4450)
+                        tVItem.cost = 2450;
+                }
+
                 //INFO:官方二级/三级'死灵书'价格错误(2700/3950/5200)
                 if (cKeyName.StartsWith("necronomicon_") && cCost == 2700)
                 {
@@ -2007,233 +2115,6 @@ namespace Tup.Dota2Recipe.Spider
         {
             //TGetDota2D2vpkResourceDotaRes();
             //await GetDota2D2vpkResourceDotaRes();
-        }
-    }
-    /// <summary>
-    /// 
-    /// </summary>
-    static class ItemUtils
-    {
-        private static Regex s_RegAbilityItemCmb = new Regex(@"<div\s+class=""(?<type>mana|cooldown)"">\s*<img\s+alt=""(?<alt>.*?)""[^>]+?/>\s*(?<value>[\s\S]+?)\s*</div>", RegexOptions.IgnoreCase);
-        private static Regex s_RegAbilityItemDesc = new Regex(@"color='(\#[\w]{6})'", RegexOptions.IgnoreCase);
-        private static Regex s_RegAbilityItemAttrib = new Regex(@"<span\s+class=""scepterVal"">([^>]*?)</span>", RegexOptions.IgnoreCase);
-        private static Regex s_RegCommonBr2 = new Regex(@"(?:<br[^>]*?>\s*){2,}", RegexOptions.IgnoreCase);
-        private static Regex s_RegCommonBrEnd = new Regex(@"<br[^>]*?>\s*$", RegexOptions.IgnoreCase);
-        private static Regex s_RegCommonRN = new Regex(@"[\s]+(?=[<])|(?<=[>])[\s]+|[\r\n]+", RegexOptions.IgnoreCase);
-        private static Regex s_RegHeroItemStats = new Regex(@"<img\s+title=""(?<alt>[\w]+)""[^>]*/>\s*<div\s+class=""overview_StatVal""\s+id=""overview_(?<type>[\w]+?)Val"">\s*(?<value>[\s\S]+?)\s*</div>", RegexOptions.IgnoreCase);
-        private static Regex s_RegHeroItemDetailstats1 = new Regex(@"<div\s+class=""statRowB?"">\s*(?:<div\s+class=""statRowCol2?W"">(?<value>[^<]+?)</div>\s*){3}\s*(?<type>[^<]+?)\s*</div>", RegexOptions.IgnoreCase);
-        private static Regex s_RegHeroItemDetailstats2 = new Regex(@"<div\s+class=""statRowB?"">\s*(?:<div\s+class=""statRowCol2?W"">(?<value>[^<]+?)</div>\s*){1}\s*(?<type>[^<]+?)\s*</div>", RegexOptions.IgnoreCase);
-        /// <summary>
-        /// Fix 英雄详细统计信息
-        /// </summary>
-        /// <param name="html"></param>
-        /// <param name="type">1,2</param>
-        /// <returns></returns>
-        public static string[][] HeroItem_FixDetailstatsField(string html, int type)
-        {
-            ThrowHelper.ThrowIfOutOfRange(type, new int[] { 1, 2 }, "type");
-            if (string.IsNullOrEmpty(html))
-                return null;
-
-            var sb = new StringBuilder();
-            var cReg = type == 1 ? s_RegHeroItemDetailstats1 : s_RegHeroItemDetailstats2;
-            var res = new List<string[]>();
-            var match = cReg.Match(html);
-            while (match.Success)
-            {
-                //value/type
-                var typev = match.Groups["type"].Value;
-                var values = match.Groups["value"];
-                if (values.Captures.Count <= 1)
-                    res.Add(new string[] { typev, values.Value });
-                else
-                {
-                    var elm = new List<string>();
-                    elm.Add(typev);
-                    elm.AddRange(values.Captures.Cast<Capture>().Select(x => x.Value));
-                    res.Add(elm.ToArray());
-                }
-                match = match.NextMatch();
-            }
-            return res.ToArray();
-        }
-        /// <summary>
-        /// Fix 英雄基本统计信息
-        /// </summary>
-        /// <param name="html"></param>
-        /// <returns></returns>
-        public static string HeroItem_FixStatsField(string html, out string[][] stats)
-        {
-            stats = null;
-            if (string.IsNullOrEmpty(html))
-                return html;
-
-            var statsList = new List<string[]>();
-            var sb = new StringBuilder();
-            var match = s_RegHeroItemStats.Match(html);
-            while (match.Success)
-            {
-                //type/alt/value
-                if (sb.Length > 0)
-                    sb.Append("<br />");
-                sb.AppendFormat(@"<img src=""{0}"" alt=""{1}"" />{1}:{2}", match.Groups["type"].Value, match.Groups["alt"].Value, match.Groups["value"].Value);
-                statsList.Add(new string[] { match.Groups["type"].Value, match.Groups["alt"].Value, match.Groups["value"].Value });
-
-                match = match.NextMatch();
-            }
-            stats = statsList.ToArray();
-            return sb.ToString();
-        }
-        /// <summary>
-        /// Fix 英雄统计参数信息
-        /// </summary>
-        /// <param name="hp">英雄属性[1:strength[力量]/2:agility[敏捷]/3:intelligence[智力]]</param>
-        /// <param name="stats"></param>
-        /// <param name="detailstats"></param>
-        /// <returns></returns>
-        public static HeroStatsItem HeroItem_FixStatsAllField(string hp, string[][] stats, string[][] detailstats)
-        {
-            if (string.IsNullOrEmpty(hp) || stats == null || detailstats == null || stats.Length < 6 || detailstats.Length < 4)
-                return null;
-
-            //stats1: [["Int","Intelligence","21 + 2.00"],
-            //           ["Agi","Agility","17 + 1.50"],
-            //           ["Str","Strength","23 + 2.70"],
-            //           ["Attack","Damage","32 - 42"],
-            //           ["Speed","Movespeed","310"],
-            //           ["Defense","Armor","1.38"]],
-
-            var s = new HeroStatsItem();
-            //智力
-            var intsp = HeroItem_FixStatsAllField_Split(stats[0][2], '+');
-            s.init_int = intsp.Item1;
-            s.lv_int = intsp.Item2;
-            //敏捷
-            var agisp = HeroItem_FixStatsAllField_Split(stats[1][2], '+');
-            s.init_agi = agisp.Item1;
-            s.lv_agi = agisp.Item2;
-            //力量
-            var strsp = HeroItem_FixStatsAllField_Split(stats[2][2], '+');
-            s.init_str = strsp.Item1;
-            s.lv_str = strsp.Item2;
-
-            //攻击力
-            var dmgsp = HeroItem_FixStatsAllField_Split(stats[3][2], '-');
-            s.init_min_dmg = dmgsp.Item1;
-            s.init_max_dmg = dmgsp.Item2;
-            if (hp == "strength")
-                s.lv_dmg = s.lv_str;
-            else if (hp == "agility")
-                s.lv_dmg = s.lv_agi;
-            else if (hp == "intelligence")
-                s.lv_dmg = s.lv_int;
-            else
-                throw new NotSupportedException();
-
-            //初始移动速度
-            s.init_ms = double.Parse(stats[4][2]);
-
-            //"detailstats1":[["生命值","2,198","1,305","587"],
-            //               ["魔法值","1,157","637","273"],
-            //               ["攻击力","140-150","93-103","55-65"],
-            //               ["护甲","9","4","1"]]
-
-            //护甲
-            var armorsp = HeroItem_FixStatsAllField_Split(stats[5][2], 'x');
-            s.init_armor = armorsp.Item1;
-            s.lv_armor = Math.Round(1D / 7D, 2);
-
-            s.lv_hp = 19D;
-            s.lv_mp = 13D;
-            s.init_hp = HeroItem_FixStatsAllField_Split(detailstats[0][3], 'x').Item1;
-            s.init_mp = HeroItem_FixStatsAllField_Split(detailstats[1][3], 'x').Item1;
-
-            return s;
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="value"></param>
-        /// <param name="splitChar"></param>
-        /// <returns></returns>
-        private static Tuple<double, double> HeroItem_FixStatsAllField_Split(string value, char splitChar)
-        {
-            ThrowHelper.ThrowIfNull(value, "value");
-
-            if (splitChar == 'x')
-                return Tuple.Create(double.Parse(value.Replace(",", "")), 0D);
-            else
-            {
-                var t = value.Split(splitChar);
-                if (t.Length > 1)
-                    return Tuple.Create(double.Parse(t[0].Replace(",", "").Trim()), double.Parse(t[1].Replace(",", "").Trim()));
-            }
-            throw new NotSupportedException();
-        }
-        /// <summary>
-        /// fix AbilityItem Cmb Field
-        /// </summary>
-        /// <param name="html"></param>
-        /// <returns></returns>
-        public static string AbilityItem_FixCmbField(string html)
-        {
-            if (string.IsNullOrEmpty(html))
-                return html;
-
-            var sb = new StringBuilder();
-            var m = s_RegAbilityItemCmb.Match(html);
-            var f = @"<img src=""{0}"" alt=""{1}"" />{1}:{2}";
-            while (m.Success)
-            {
-                //type/alt/value
-                if (sb.Length > 0)
-                    sb.Append("<br />");
-                sb.AppendFormat(f, m.Groups["type"].Value, m.Groups["alt"].Value, m.Groups["value"].Value);
-
-                m = m.NextMatch();
-            }
-            return sb.ToString();
-        }
-        /// <summary>
-        /// fix AbilityItem Desc Field
-        /// </summary>
-        /// <param name="html"></param>
-        /// <returns></returns>
-        public static string AbilityItem_FixDescField(string html)
-        {
-            if (string.IsNullOrEmpty(html))
-                return html;
-
-            return s_RegAbilityItemDesc.Replace(html, @"color=""$1""");
-        }
-        /// <summary>
-        /// fix AbilityItem Attrib Field
-        /// </summary>
-        /// <param name="html"></param>
-        /// <returns></returns>
-        public static string AbilityItem_FixAttribField(string html)
-        {
-            if (string.IsNullOrEmpty(html))
-                return html;
-
-            return s_RegAbilityItemAttrib.Replace(html, @"<span class=""scepterVal""><font color=""#6fe771"">$1</font></span>");
-        }
-        /// <summary>
-        /// 归置 HTML 内 Br, 末尾/中间多个/
-        /// </summary>
-        /// <param name="html"></param>
-        /// <returns></returns>
-        public static string Common_FixBrHtml(string html)
-        {
-            if (string.IsNullOrEmpty(html))
-                return html;
-
-            html = s_RegCommonBr2.Replace(html, "<br />");
-            html = s_RegCommonBrEnd.Replace(html, "");
-            html = s_RegCommonRN.Replace(html, "");
-            html = html.Replace("&nbsp;", "");
-
-            return html;
         }
     }
 }
