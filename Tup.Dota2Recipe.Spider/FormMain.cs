@@ -61,22 +61,22 @@ namespace Tup.Dota2Recipe.Spider
         private static readonly string s_LSChinese = "&l=schinese";
         private static readonly string s_Dota2HostUri = "http://www.dota2.com";
         //private static readonly string s_Dota2SteamMedia = "http://media.steampowered.com/apps/dota2/images";
-        private static readonly string s_Dota2SteamMedia = "http://cdn.dota2.com/apps/dota2/images";
+        private static readonly string s_Dota2SteamMedia = "http://www.dota2.com.cn/images";
 
         /// <summary>
-        /// dotabuff github.com d2vpk project
+        /// dotabuff github.com d2vpkr project
         /// </summary>
         /// <remarks>
-        /// %Steam_Dota2%\SteamApps\common\dota 2 beta\dota\pak01_dir.vpk
+        /// %Steam_Dota2%\steamapps\common\dota 2 beta\game\dota\pak01_dir.vpk
         /// 
         /// 英雄:/dota_pak01/scripts/npc/npc_heroes.json
-        ///      https://raw.githubusercontent.com/dotabuff/d2vpk/master/json/dota_pak01/scripts/npc/npc_heroes.json
+        ///      https://raw.githubusercontent.com/dotabuff/d2vpkr/master/dota/scripts/npc/npc_heroes.json
         /// 技能:/dota_pak01/scripts/npc/npc_abilities.json
-        ///      https://github.com/dotabuff/d2vpk/raw/master/json/dota_pak01/scripts/npc/npc_abilities.json
+        ///      https://raw.githubusercontent.com/dotabuff/d2vpkr/master/dota/scripts/npc/npc_abilities.json
         /// 物品:/dota_pak01/scripts/npc/items.json
-        ///      https://github.com/dotabuff/d2vpk/raw/master/json/dota_pak01/scripts/npc/items.json
+        ///      https://raw.githubusercontent.com/dotabuff/d2vpkr/master/dota/scripts/npc/items.json
         /// </remarks>
-        private static readonly string s_GitHub_DotaBuff_Uri = "https://raw.githubusercontent.com/dotabuff/d2vpk/master/";
+        private static readonly string s_GitHub_DotaBuff_Uri = "https://raw.githubusercontent.com/dotabuff/d2vpkr/master/dota/";
         /// <summary>
         /// dotabuff github.com d2vpk project-dota_pak01
         /// </summary>
@@ -184,7 +184,7 @@ namespace Tup.Dota2Recipe.Spider
         /// replays.net 英雄技能名称到 Dota2 官方数据名称转换 映射字典
         /// </summary>
         private static readonly Dictionary<string, Dictionary<string, string>> s_Replays_HeroDataAbilityName_Convert_Map
-            = new Dictionary<string, Dictionary<string, string>>() 
+            = new Dictionary<string, Dictionary<string, string>>()
             { 
                 #region Replays_AbilityName_Convert_Map
                 {"bane",
@@ -262,7 +262,7 @@ namespace Tup.Dota2Recipe.Spider
                 {"chaos_knight",
                     new Dictionary<string, string>(){
                         {"致命一击", "混沌一击"},
-                        {"幻象", "混沌之军"}	
+                        {"幻象", "混沌之军"}
                     }
                 },
                 {"visage",
@@ -353,7 +353,16 @@ namespace Tup.Dota2Recipe.Spider
                         {"取消海妖之歌", "终止海妖之歌"},
                     }
                 },
- 
+                 {"drow_ranger",
+                    new Dictionary<string, string>(){
+                        {"强击光环", "精准光环"}
+                    }
+                },
+                {"tinker",
+                    new Dictionary<string, string>(){
+                        {"机器人的进军", "进击的机械"}
+                    }
+                },
                 #endregion
             };
 
@@ -481,6 +490,7 @@ namespace Tup.Dota2Recipe.Spider
 
             var heroDic = new Dictionary<string, HeroItem>();
             var http = new HttpClient();
+            http.Timeout = TimeSpan.FromMinutes(1); //1分钟超时
 
             #region 英雄基础数据
             Msg("hero-get-base");
@@ -616,6 +626,7 @@ namespace Tup.Dota2Recipe.Spider
             ThrowHelper.ThrowIfNull(heroDic, "heroDic");
 
             var http = new HttpClient();
+            http.Timeout = TimeSpan.FromMinutes(1); //1分钟超时
 
             #region replays.net-HeroList
             Msg("hero-get-Replays_GetHeroData_List-begion");
@@ -840,6 +851,8 @@ namespace Tup.Dota2Recipe.Spider
                 Directory.CreateDirectory(heroesIconFilesDir);
 
             var http = new HttpClient();
+            http.Timeout = TimeSpan.FromMinutes(1); //1分钟超时
+
             var abilityDic = new Dictionary<string, AbilityItem>();
 
             #region get-DetailAndAbility JSON
@@ -848,6 +861,8 @@ namespace Tup.Dota2Recipe.Spider
             var lAbilityData = JObject.Parse(await http.GetStringAsync(lurl));
 
             Msg("hero-get-DetailAndAbility-Ability-URL:{0}", lurl);
+
+            var cCheckBoxHeroAbilityImage = this.CheckBoxHeroAbilityImage.Checked;
             //技能列表
             lAbilityData = (JObject)lAbilityData["abilitydata"];
             foreach (var cAbilityItem in lAbilityData)
@@ -873,7 +888,7 @@ namespace Tup.Dota2Recipe.Spider
                 Msg("hero-get-DetailAndAbility-Ability-GET:{0}", tVAbilityItem.key_name);
 
                 //下载技能图片
-                if (this.CheckBoxHeroAbilityImage.Checked)
+                if (cCheckBoxHeroAbilityImage)
                 {
                     var imgUri = string.Format(s_GetImageAbilitiesUri, cAbilityItem.Key);
                     lock (s_DownloadImageQueue)
@@ -895,6 +910,7 @@ namespace Tup.Dota2Recipe.Spider
             //s_RegGetHeroItemDataDetailStatsHtml
             var regStatsHtml = new Regex(s_RegGetHeroItemDataStatsHtml, RegexOptions.IgnoreCase);
             var regDetailStatsHtml = new Regex(s_RegGetHeroItemDataDetailStatsHtml, RegexOptions.IgnoreCase);
+            var cCheckBoxHeroImage = this.CheckBoxHeroImage.Checked;
             foreach (var heroItem in heroDic)
             {
                 Msg("hero-get-DetailAndAbility-Hero:{0}", heroItem.Key);
@@ -1007,7 +1023,7 @@ namespace Tup.Dota2Recipe.Spider
                 Msg("hero-get-DetailAndAbility-Hero-GET:{0}-save-------", cVHeroItem.key_name);
 
                 #region 下载英雄图片
-                if (this.CheckBoxHeroImage.Checked)
+                if (cCheckBoxHeroImage)
                 {
                     lock (s_DownloadImageQueue)
                     {
@@ -1685,6 +1701,8 @@ namespace Tup.Dota2Recipe.Spider
             this.ClearMsg();
 
             var http = new HttpClient();
+            http.Timeout = TimeSpan.FromMinutes(1); //1分钟超时
+
             await InitDota2ClientRes(http);
 
             var itemsDic = new Dictionary<string, ItemsItem>();
