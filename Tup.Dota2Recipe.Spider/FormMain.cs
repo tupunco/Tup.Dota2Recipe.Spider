@@ -486,11 +486,11 @@ namespace Tup.Dota2Recipe.Spider
         {
             this.ClearMsg();
 
-            //await InitDota2ClientRes();
-
             var heroDic = new Dictionary<string, HeroItem>();
             var http = new HttpClient();
             http.Timeout = TimeSpan.FromMinutes(1); //1分钟超时
+
+            await InitDota2ClientRes(http);
 
             #region 英雄基础数据
             Msg("hero-get-base");
@@ -1232,12 +1232,18 @@ namespace Tup.Dota2Recipe.Spider
         }
 
         #region Dota2客户端下 资源加载处理
+        private static bool HasInitDota2ClientRes = false;
         /// <summary>
         /// 初始化 Dota2 文件夹下 资源数据
         /// </summary>
         /// <param name="http">HttpClient</param>
         private async Task InitDota2ClientRes(HttpClient http)
         {
+            if (HasInitDota2ClientRes)
+                return;
+
+            HasInitDota2ClientRes = true;
+
             ThrowHelper.ThrowIfNull(http, "http");
 
             if (this.CheckBoxHeroDetail.Checked
