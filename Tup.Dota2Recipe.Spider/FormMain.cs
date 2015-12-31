@@ -363,6 +363,37 @@ namespace Tup.Dota2Recipe.Spider
                         {"机器人的进军", "进击的机械"}
                     }
                 },
+                {"riki",
+                    new Dictionary<string, string>(){
+                        {"背刺", "绝杀秘技"},
+                        {"永久隐身", "刀光谍影"}
+                    }
+                },
+                {"faceless_void",
+                    new Dictionary<string, string>(){
+                        {"回到过去", "时间膨胀"}  //虚空假面 技能
+                    }
+                },
+                { "death_prophet",
+                    new Dictionary<string, string>(){
+                        {"巫术精研", "吸魂巫术"}
+                    }
+                },
+                { "doom_bringer",
+                    new Dictionary<string, string>(){
+                        {"死亡", "地狱烈刃"}
+                    }
+                },
+                { "lone_druid",
+                    new Dictionary<string, string>(){
+                        {"协同", "野蛮咆哮"}
+                    }
+                },
+                { "silencer",
+                    new Dictionary<string, string>(){
+                        {"静默诅咒", "奥术诅咒"}
+                    }
+                },
                 #endregion
             };
 
@@ -1329,7 +1360,7 @@ namespace Tup.Dota2Recipe.Spider
                 QMapObjectValue itemsElm = null;
                 if (qmap == null
                     || (itemsElm = qmap.Value.ToObjectValue().Find("Tokens").ToObjectValue()) == null //lang>Tokens
-                        || itemsElm.Value == null)
+                    || itemsElm.Value == null)
                 {
                     Msg("******---GetDota2LangResourceDotaRes-{0}-qmap-NULL", path);
                     return null;
